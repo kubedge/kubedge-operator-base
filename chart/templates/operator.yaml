@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baseoperator-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: baseoperator-operator
+  template:
+    metadata:
+      labels:
+        name: baseoperator-operator
+    spec:
+      serviceAccountName: kubedge-operator
+      containers:
+        - name: baseoperator-operator
+          # Replace this with the built image name
+          image: {{ .Values.images.tags.operator }}
+          command:
+          - baseoperator-operator
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "baseoperator-operator"

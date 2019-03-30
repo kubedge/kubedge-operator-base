@@ -1,0 +1,12 @@
+apiVersion: baseoperator.kubedge.cloud/v1alpha1
+kind: TestPhase
+metadata:
+  name: test-phase
+spec:
+  openstackServiceName: testservice
+  targetOpenstackServiceVersion: moc.version.to.test.to
+  targetState: deployed
+  source:
+    type: local
+    location: /opt/kubedge-operators/test-pods/busybox.yaml
+    subpath: .

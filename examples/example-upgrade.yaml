@@ -1,0 +1,27 @@
+apiVersion: baseoperator.kubedge.cloud/v1alpha1
+kind: UpgradePhase
+metadata:
+  name: upgrade-phase
+spec:
+  openstackServiceName: testservice
+  targetOpenstackServiceVersion: moc.version.to.upgrade.to
+  targetState: deployed
+  source:
+    type: local
+    location: /opt/kubedge-operators/test-pods/busybox.yaml
+    subpath: .
+
+  storageType: offsite
+  backupPolicy:
+    timeoutInSecond: 3
+  # ceph:
+  #   cephSecret: thesecret
+  #   path: example
+  clientTLSSecret: client.crt
+  offsite:
+    endpoint: sftp://foo.bar
+    forcePathStyle: true
+    offsiteSecret: thesecret
+    path: xxx
+  openstackEndpoints:
+  - https://local.com

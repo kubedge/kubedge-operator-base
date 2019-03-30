@@ -1,0 +1,24 @@
+apiVersion: baseoperator.kubedge.cloud/v1alpha1
+kind: RollbackPhase
+metadata:
+  name: rollback-phase
+spec:
+  openstackServiceName: testservice
+  targetOpenstackServiceVersion: moc.version.to.rollback.to
+  targetState: deployed
+  source:
+    type: local
+    location: /opt/kubedge-operators/test-pods/busybox.yaml
+    subpath: .
+
+  backupStorageType: offsite
+  # ceph:
+  #   cephSecret: thesecret
+  #   path: example
+  offsite:
+    endpoint: sftp://foo.bar
+    forcePathStyle: true
+    offsiteSecret: thesecret
+    path: xxx
+  openstackEndpoints:
+  - https://local.com
