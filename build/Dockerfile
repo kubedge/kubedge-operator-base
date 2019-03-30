@@ -1,11 +1,11 @@
 FROM alpine:3.8
 
-ENV OPERATOR=/usr/local/bin/baseoperator-operator \
+ENV OPERATOR=/usr/local/bin/kubedge-base-operator \
     USER_UID=1001 \
-    USER_NAME=baseoperator-operator
+    USER_NAME=kubedge-base-operator
 
 # install operator binary
-COPY build/_output/bin/baseoperator-operator ${OPERATOR}
+COPY build/_output/bin/kubedge-base-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 

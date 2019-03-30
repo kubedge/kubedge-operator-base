@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"reflect"
 
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
-	testphasemgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
+	mmesimmgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
 	services "github.com/kubedge/kubedge-operator-base/pkg/services"
 
 	corev1 "k8s.io/api/core/v1"
@@ -37,23 +37,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var testphaselog = logf.Log.WithName("testphase-controller")
+var mmesimlog = logf.Log.WithName("mmesim-controller")
 
-// AddTestPhaseController creates a new TestPhase Controller and adds it to
+// AddMMESimController creates a new MMESim Controller and adds it to
 // the Manager. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
-func AddTestPhaseController(mgr manager.Manager) error {
-	return addTestPhase(mgr, newTestPhaseReconciler(mgr))
+func AddMMESimController(mgr manager.Manager) error {
+	return addMMESim(mgr, newMMESimReconciler(mgr))
 }
 
-// newTestPhaseReconciler returns a new reconcile.Reconciler
-func newTestPhaseReconciler(mgr manager.Manager) reconcile.Reconciler {
-	r := &TestPhaseReconciler{
+// newMMESimReconciler returns a new reconcile.Reconciler
+func newMMESimReconciler(mgr manager.Manager) reconcile.Reconciler {
+	r := &MMESimReconciler{
 		PhaseReconciler: PhaseReconciler{
 			client:         mgr.GetClient(),
 			scheme:         mgr.GetScheme(),
-			recorder:       mgr.GetRecorder("testphase-recorder"),
-			managerFactory: testphasemgr.NewManagerFactory(mgr),
+			recorder:       mgr.GetRecorder("mmesim-recorder"),
+			managerFactory: mmesimmgr.NewManagerFactory(mgr),
 			// reconcilePeriod: flags.ReconcilePeriod,
 		},
 	}
@@ -61,18 +61,18 @@ func newTestPhaseReconciler(mgr manager.Manager) reconcile.Reconciler {
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
-func addTestPhase(mgr manager.Manager, r reconcile.Reconciler) error {
+func addMMESim(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Create a new controller
-	c, err := controller.New("testphase-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("mmesim-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource TestPhase
+	// Watch for changes to primary resource MMESim
 	// EnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object
 	// that is the source of the Event. (e.g. the created / deleted / updated objects Name and Namespace).
-	err = c.Watch(&source.Kind{Type: &av1.TestPhase{}}, &crthandler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &av1.MMESim{}}, &crthandler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func addTestPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 		// reconciliation. Another reconcile would be redundant.
 		CreateFunc: func(e event.CreateEvent) bool {
 			o := e.Object.(*unstructured.Unstructured)
-			testphaselog.Info("CreateEvent. Filtering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			mmesimlog.Info("CreateEvent. Filtering", "resource", o.GetName(), "namespace", o.GetNamespace(),
 				"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
 			return false
 		},
@@ -92,7 +92,7 @@ func addTestPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 		// recreated.
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			o := e.Object.(*unstructured.Unstructured)
-			testphaselog.Info("DeleteEvent. Triggering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			mmesimlog.Info("DeleteEvent. Triggering", "resource", o.GetName(), "namespace", o.GetNamespace(),
 				"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
 			return true
 		},
@@ -111,25 +111,25 @@ func addTestPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 			new.SetResourceVersion("")
 
 			if reflect.DeepEqual(old.Object, new.Object) {
-				testphaselog.Info("UpdateEvent. Filtering", "resource", new.GetName(), "namespace", new.GetNamespace(),
+				mmesimlog.Info("UpdateEvent. Filtering", "resource", new.GetName(), "namespace", new.GetNamespace(),
 					"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
 				return false
 			} else {
-				testphaselog.Info("UpdateEvent. Triggering", "resource", new.GetName(), "namespace", new.GetNamespace(),
+				mmesimlog.Info("UpdateEvent. Triggering", "resource", new.GetName(), "namespace", new.GetNamespace(),
 					"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
 				return true
 			}
 		},
 	}
 
-	// Watch for changes to secondary resource (described in the yaml files) and requeue the owner TestPhase
+	// Watch for changes to secondary resource (described in the yaml files) and requeue the owner MMESim
 	// EnqueueRequestForOwner enqueues Requests for the Owners of an object. E.g. the object
 	// that created the object that was the source of the Event
-	if racr, isTestPhaseReconciler := r.(*TestPhaseReconciler); isTestPhaseReconciler {
+	if racr, isMMESimReconciler := r.(*MMESimReconciler); isMMESimReconciler {
 		// The enqueueRequestForOwner is not actually done here since we don't know yet the
 		// content of the yaml files. The tools wait for the yaml files to be parse. The manager
 		// then add the "OwnerReference" to the content of the yaml files. It then invokes the EnqueueRequestForOwner
-		owner := av1.NewTestPhaseVersionKind("", "")
+		owner := av1.NewMMESimVersionKind("", "")
 		racr.depResourceWatchUpdater = services.BuildDependentResourceWatchUpdater(mgr, owner, c, dependentPredicate)
 	} else if rrf, isReconcileFunc := r.(*reconcile.Func); isReconcileFunc {
 		// Unit test issue
@@ -139,28 +139,28 @@ func addTestPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &TestPhaseReconciler{}
+var _ reconcile.Reconciler = &MMESimReconciler{}
 
-// TestPhaseReconciler reconciles custom resources as Argo workflows.
-type TestPhaseReconciler struct {
+// MMESimReconciler reconciles custom resources as Argo workflows.
+type MMESimReconciler struct {
 	PhaseReconciler
 }
 
 const (
-	finalizerTestPhase = "uninstall-testphase-resource"
+	finalizerMMESim = "uninstall-mmesim-resource"
 )
 
-// Reconcile reads that state of the cluster for an TestPhase object and
-// makes changes based on the state read and what is in the TestPhase.Spec
+// Reconcile reads that state of the cluster for an MMESim object and
+// makes changes based on the state read and what is in the MMESim.Spec
 //
 // Note: The Controller will requeue the Request to be processed again if the
 // returned error is non-nil or Result.Requeue is true, otherwise upon
 // completion it will remove the work from the queue.
-func (r *TestPhaseReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reclog := testphaselog.WithValues("namespace", request.Namespace, "testphase", request.Name)
+func (r *MMESimReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	reclog := mmesimlog.WithValues("namespace", request.Namespace, "mmesim", request.Name)
 	reclog.Info("Received a request")
 
-	instance := &av1.TestPhase{}
+	instance := &av1.MMESim{}
 	instance.SetNamespace(request.Namespace)
 	instance.SetName(request.Name)
 
@@ -174,12 +174,12 @@ func (r *TestPhaseReconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	if err != nil {
-		reclog.Error(err, "Failed to lookup TestPhase")
+		reclog.Error(err, "Failed to lookup MMESim")
 		return reconcile.Result{}, err
 	}
 
-	mgr := r.managerFactory.NewTestPhaseManager(instance)
-	reclog = reclog.WithValues("testphase", mgr.ResourceName())
+	mgr := r.managerFactory.NewMMESimManager(instance)
+	reclog = reclog.WithValues("mmesim", mgr.ResourceName())
 
 	var shouldRequeue bool
 	if shouldRequeue, err = r.updateFinalizers(instance); shouldRequeue {
@@ -196,7 +196,7 @@ func (r *TestPhaseReconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	if instance.IsDeleted() {
-		if shouldRequeue, err = r.deleteTestPhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.deleteMMESim(mgr, instance); shouldRequeue {
 			// Need to requeue because finalizer update does not change metadata.generation
 			return reconcile.Result{Requeue: true}, err
 		}
@@ -221,48 +221,48 @@ func (r *TestPhaseReconciler) Reconcile(request reconcile.Request) (reconcile.Re
 
 	switch {
 	case !mgr.IsInstalled():
-		if shouldRequeue, err = r.installTestPhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.installMMESim(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 		}
 		return reconcile.Result{}, err
 	case mgr.IsUpdateRequired():
-		if shouldRequeue, err = r.updateTestPhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.updateMMESim(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 		}
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileTestPhase(mgr, instance); err != nil {
+	if err := r.reconcileMMESim(mgr, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	reclog.Info("Reconciled TestPhase")
+	reclog.Info("Reconciled MMESim")
 	err = r.updateResourceStatus(instance)
 	return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 }
 
 // logAndRecordFailure adds a failure event to the recorder
-func (r TestPhaseReconciler) logAndRecordFailure(instance *av1.TestPhase, hrc *av1.LcmResourceCondition, err error) {
-	reclog := testphaselog.WithValues("namespace", instance.Namespace, "testphase", instance.Name)
+func (r MMESimReconciler) logAndRecordFailure(instance *av1.MMESim, hrc *av1.LcmResourceCondition, err error) {
+	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Error(err, fmt.Sprintf("%s. ErrorCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeWarning, hrc.Type.String(), hrc.Reason.String())
 }
 
 // logAndRecordSuccess adds a success event to the recorder
-func (r TestPhaseReconciler) logAndRecordSuccess(instance *av1.TestPhase, hrc *av1.LcmResourceCondition) {
-	reclog := testphaselog.WithValues("namespace", instance.Namespace, "testphase", instance.Name)
+func (r MMESimReconciler) logAndRecordSuccess(instance *av1.MMESim, hrc *av1.LcmResourceCondition) {
+	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info(fmt.Sprintf("%s. SuccessCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeNormal, hrc.Type.String(), hrc.Reason.String())
 }
 
 // updateResource updates the Resource object in the cluster
-func (r TestPhaseReconciler) updateResource(instance *av1.TestPhase) error {
+func (r MMESimReconciler) updateResource(instance *av1.MMESim) error {
 	return r.client.Update(context.TODO(), instance)
 }
 
 // updateResourceStatus updates the the Status field of the Resource object in the cluster
-func (r TestPhaseReconciler) updateResourceStatus(instance *av1.TestPhase) error {
-	reclog := testphaselog.WithValues("namespace", instance.Namespace, "testphase", instance.Name)
+func (r MMESimReconciler) updateResourceStatus(instance *av1.MMESim) error {
+	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 
 	helper := av1.LcmResourceConditionListHelper{Items: instance.Status.Conditions}
 	instance.Status.Conditions = helper.InitIfEmpty()
@@ -278,8 +278,8 @@ func (r TestPhaseReconciler) updateResourceStatus(instance *av1.TestPhase) error
 	return err
 }
 
-// ensureSynced checks that the TestPhaseManager is in sync with the cluster
-func (r TestPhaseReconciler) ensureSynced(mgr services.TestPhaseManager, instance *av1.TestPhase) error {
+// ensureSynced checks that the MMESimManager is in sync with the cluster
+func (r MMESimReconciler) ensureSynced(mgr services.MMESimManager, instance *av1.MMESim) error {
 	if err := mgr.Sync(context.TODO()); err != nil {
 		hrc := av1.LcmResourceCondition{
 			Type:    av1.ConditionIrreconcilable,
@@ -299,10 +299,10 @@ func (r TestPhaseReconciler) ensureSynced(mgr services.TestPhaseManager, instanc
 // updateFinalizers asserts that the finalizers match what is expected based on
 // whether the instance is currently being deleted or not. It returns true if
 // the finalizers were changed, false otherwise
-func (r TestPhaseReconciler) updateFinalizers(instance *av1.TestPhase) (bool, error) {
+func (r MMESimReconciler) updateFinalizers(instance *av1.MMESim) (bool, error) {
 	pendingFinalizers := instance.GetFinalizers()
-	if !instance.IsDeleted() && !r.contains(pendingFinalizers, finalizerTestPhase) {
-		finalizers := append(pendingFinalizers, finalizerTestPhase)
+	if !instance.IsDeleted() && !r.contains(pendingFinalizers, finalizerMMESim) {
+		finalizers := append(pendingFinalizers, finalizerMMESim)
 		instance.SetFinalizers(finalizers)
 		err := r.updateResource(instance)
 
@@ -312,7 +312,7 @@ func (r TestPhaseReconciler) updateFinalizers(instance *av1.TestPhase) (bool, er
 }
 
 // watchDependentResources updates all resources which are dependent on this one
-func (r TestPhaseReconciler) watchDependentResources(resource *av1.SubResourceList) error {
+func (r MMESimReconciler) watchDependentResources(resource *av1.SubResourceList) error {
 	if r.depResourceWatchUpdater != nil {
 		if err := r.depResourceWatchUpdater(resource.GetDependentResources()); err != nil {
 			return err
@@ -321,14 +321,14 @@ func (r TestPhaseReconciler) watchDependentResources(resource *av1.SubResourceLi
 	return nil
 }
 
-// deleteTestPhase deletes an instance of an TestPhase. It returns true if the reconciler should be re-enqueueed
-func (r TestPhaseReconciler) deleteTestPhase(mgr services.TestPhaseManager, instance *av1.TestPhase) (bool, error) {
-	reclog := testphaselog.WithValues("namespace", instance.Namespace, "testphase", instance.Name)
+// deleteMMESim deletes an instance of an MMESim. It returns true if the reconciler should be re-enqueueed
+func (r MMESimReconciler) deleteMMESim(mgr services.MMESimManager, instance *av1.MMESim) (bool, error) {
+	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info("Deleting")
 
 	pendingFinalizers := instance.GetFinalizers()
-	if !r.contains(pendingFinalizers, finalizerTestPhase) {
-		reclog.Info("TestPhase is terminated, skipping reconciliation")
+	if !r.contains(pendingFinalizers, finalizerMMESim) {
+		reclog.Info("MMESim is terminated, skipping reconciliation")
 		return false, nil
 	}
 
@@ -366,7 +366,7 @@ func (r TestPhaseReconciler) deleteTestPhase(mgr services.TestPhaseManager, inst
 
 	finalizers := []string{}
 	for _, pendingFinalizer := range pendingFinalizers {
-		if pendingFinalizer != finalizerTestPhase {
+		if pendingFinalizer != finalizerMMESim {
 			finalizers = append(finalizers, pendingFinalizer)
 		}
 	}
@@ -376,9 +376,9 @@ func (r TestPhaseReconciler) deleteTestPhase(mgr services.TestPhaseManager, inst
 	return true, err
 }
 
-// installTestPhase attempts to install instance. It returns true if the reconciler should be re-enqueueed
-func (r TestPhaseReconciler) installTestPhase(mgr services.TestPhaseManager, instance *av1.TestPhase) (bool, error) {
-	reclog := testphaselog.WithValues("namespace", instance.Namespace, "testphase", instance.Name)
+// installMMESim attempts to install instance. It returns true if the reconciler should be re-enqueueed
+func (r MMESimReconciler) installMMESim(mgr services.MMESimManager, instance *av1.MMESim) (bool, error) {
+	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info("Installing`")
 
 	installedResource, err := mgr.InstallResource(context.TODO())
@@ -417,9 +417,9 @@ func (r TestPhaseReconciler) installTestPhase(mgr services.TestPhaseManager, ins
 	return true, err
 }
 
-// updateTestPhase attempts to update instance. It returns true if the reconciler should be re-enqueueed
-func (r TestPhaseReconciler) updateTestPhase(mgr services.TestPhaseManager, instance *av1.TestPhase) (bool, error) {
-	reclog := testphaselog.WithValues("namespace", instance.Namespace, "testphase", instance.Name)
+// updateMMESim attempts to update instance. It returns true if the reconciler should be re-enqueueed
+func (r MMESimReconciler) updateMMESim(mgr services.MMESimManager, instance *av1.MMESim) (bool, error) {
+	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info("Updating`")
 
 	previousResource, updatedResource, err := mgr.UpdateResource(context.TODO())
@@ -462,10 +462,10 @@ func (r TestPhaseReconciler) updateTestPhase(mgr services.TestPhaseManager, inst
 	return true, err
 }
 
-// reconcileTestPhase reconciles the yaml files with the cluster
-func (r TestPhaseReconciler) reconcileTestPhase(mgr services.TestPhaseManager, instance *av1.TestPhase) error {
-	reclog := testphaselog.WithValues("namespace", instance.Namespace, "testphase", instance.Name)
-	reclog.Info("Reconciling TestPhase and LcmResource")
+// reconcileMMESim reconciles the yaml files with the cluster
+func (r MMESimReconciler) reconcileMMESim(mgr services.MMESimManager, instance *av1.MMESim) error {
+	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
+	reclog.Info("Reconciling MMESim and LcmResource")
 
 	expectedResource, err := mgr.ReconcileResource(context.TODO())
 	if err != nil {

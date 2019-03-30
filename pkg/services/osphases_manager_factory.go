@@ -15,12 +15,12 @@
 package services
 
 import (
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 )
 
 // ManagerFactory creates Managers that are specific to custom resources.
 type PhaseManagerFactory interface {
-	NewTestPhaseManager(r *av1.TestPhase) TestPhaseManager
-	NewUpgradePhaseManager(r *av1.UpgradePhase) UpgradePhaseManager
-	NewRollbackPhaseManager(r *av1.RollbackPhase) RollbackPhaseManager
+	NewArpscanManager(r *av1.Arpscan) ArpscanManager
+	NewECDSClusterManager(r *av1.ECDSCluster) ECDSClusterManager
+	NewMMESimManager(r *av1.MMESim) MMESimManager
 }

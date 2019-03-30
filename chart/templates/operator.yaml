@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: baseoperator-operator
+  name: kubedge-base-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: baseoperator-operator
+      name: kubedge-base-operator
   template:
     metadata:
       labels:
-        name: baseoperator-operator
+        name: kubedge-base-operator
     spec:
       serviceAccountName: kubedge-operator
       containers:
-        - name: baseoperator-operator
+        - name: kubedge-base-operator
           # Replace this with the built image name
           image: {{ .Values.images.tags.operator }}
           command:
-          - baseoperator-operator
+          - kubedge-base-operator
           imagePullPolicy: {{ .Values.images.pullPolicy }}
           env:
             - name: WATCH_NAMESPACE
@@ -31,4 +31,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "baseoperator-operator"
+              value: "kubedge-base-operator"

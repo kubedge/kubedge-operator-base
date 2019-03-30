@@ -9,34 +9,34 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// TestPhaseSpec defines the desired state of TestPhase
-type TestPhaseSpec struct {
+// ArpscanSpec defines the desired state of Arpscan
+type ArpscanSpec struct {
 	PhaseSpec `json:",inline"`
 }
 
-// TestPhaseStatus defines the observed state of TestPhase
-type TestPhaseStatus struct {
+// ArpscanStatus defines the observed state of Arpscan
+type ArpscanStatus struct {
 	PhaseStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// TestPhase is the Schema for the openstackdeployments API
+// Arpscan is the Schema for the openstackdeployments API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=testphases,shortName=ostest
+// +kubebuilder:resource:path=arpscans,shortName=ostest
 // +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
-type TestPhase struct {
+type Arpscan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TestPhaseSpec   `json:"spec,omitempty"`
-	Status TestPhaseStatus `json:"status,omitempty"`
+	Spec   ArpscanSpec   `json:"spec,omitempty"`
+	Status ArpscanStatus `json:"status,omitempty"`
 }
 
-// Init is used to initialize an TestPhase. Namely, if the state has not been
+// Init is used to initialize an Arpscan. Namely, if the state has not been
 // specified, it will be set
-func (obj *TestPhase) Init() {
+func (obj *Arpscan) Init() {
 	if obj.Status.ActualState == "" {
 		obj.Status.ActualState = StateUninitialied
 	}
@@ -47,17 +47,17 @@ func (obj *TestPhase) Init() {
 }
 
 // Return the list of dependent resources to watch
-func (obj *TestPhase) GetDependentResources() []unstructured.Unstructured {
+func (obj *Arpscan) GetDependentResources() []unstructured.Unstructured {
 	var res = make([]unstructured.Unstructured, 0)
 	return res
 }
 
-// Convert an unstructured.Unstructured into a typed TestPhase
-func ToTestPhase(u *unstructured.Unstructured) *TestPhase {
-	var obj *TestPhase
+// Convert an unstructured.Unstructured into a typed Arpscan
+func ToArpscan(u *unstructured.Unstructured) *Arpscan {
+	var obj *Arpscan
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &TestPhase{
+		return &Arpscan{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      u.GetName(),
 				Namespace: u.GetNamespace(),
@@ -67,9 +67,9 @@ func ToTestPhase(u *unstructured.Unstructured) *TestPhase {
 	return obj
 }
 
-// Convert a typed TestPhase into an unstructured.Unstructured
-func (obj *TestPhase) FromTestPhase() *unstructured.Unstructured {
-	u := NewTestPhaseVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
+// Convert a typed Arpscan into an unstructured.Unstructured
+func (obj *Arpscan) FromArpscan() *unstructured.Unstructured {
+	u := NewArpscanVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -79,24 +79,24 @@ func (obj *TestPhase) FromTestPhase() *unstructured.Unstructured {
 }
 
 // IsDeleted returns true if the chart group has been deleted
-func (obj *TestPhase) IsDeleted() bool {
+func (obj *Arpscan) IsDeleted() bool {
 	return obj.GetDeletionTimestamp() != nil
 }
 
 // IsSatisfied returns true if the chart's actual state meets its target state
-func (obj *TestPhase) IsSatisfied() bool {
+func (obj *Arpscan) IsSatisfied() bool {
 	return obj.Spec.TargetState == obj.Status.ActualState
 }
 
-func (obj *TestPhase) GetName() string {
+func (obj *Arpscan) GetName() string {
 	return obj.ObjectMeta.Name
 }
 
-// Returns a GKV for TestPhase
-func NewTestPhaseVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for Arpscan
+func NewArpscanVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
-	u.SetAPIVersion("baseoperator.kubedge.cloud/v1alpha1")
-	u.SetKind("TestPhase")
+	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
+	u.SetKind("Arpscan")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
@@ -104,26 +104,26 @@ func NewTestPhaseVersionKind(namespace string, name string) *unstructured.Unstru
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// TestPhaseList contains a list of TestPhase
-type TestPhaseList struct {
+// ArpscanList contains a list of Arpscan
+type ArpscanList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []TestPhase `json:"items"`
+	Items           []Arpscan `json:"items"`
 }
 
-// Convert an unstructured.Unstructured into a typed TestPhaseList
-func ToTestPhaseList(u *unstructured.Unstructured) *TestPhaseList {
-	var obj *TestPhaseList
+// Convert an unstructured.Unstructured into a typed ArpscanList
+func ToArpscanList(u *unstructured.Unstructured) *ArpscanList {
+	var obj *ArpscanList
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &TestPhaseList{}
+		return &ArpscanList{}
 	}
 	return obj
 }
 
-// Convert a typed TestPhaseList into an unstructured.Unstructured
-func (obj *TestPhaseList) FromTestPhaseList() *unstructured.Unstructured {
-	u := NewTestPhaseListVersionKind("", "")
+// Convert a typed ArpscanList into an unstructured.Unstructured
+func (obj *ArpscanList) FromArpscanList() *unstructured.Unstructured {
+	u := NewArpscanListVersionKind("", "")
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -133,23 +133,23 @@ func (obj *TestPhaseList) FromTestPhaseList() *unstructured.Unstructured {
 }
 
 // JEB: Not sure yet if we really will need it
-func (obj *TestPhaseList) Equivalent(other *TestPhaseList) bool {
+func (obj *ArpscanList) Equivalent(other *ArpscanList) bool {
 	if other == nil {
 		return false
 	}
 	return reflect.DeepEqual(obj.Items, other.Items)
 }
 
-// Returns a GKV for TestPhaseList
-func NewTestPhaseListVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for ArpscanList
+func NewArpscanListVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
-	u.SetAPIVersion("baseoperator.kubedge.cloud/v1alpha1")
-	u.SetKind("TestPhaseList")
+	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
+	u.SetKind("ArpscanList")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
 }
 
 func init() {
-	SchemeBuilder.Register(&TestPhase{}, &TestPhaseList{})
+	SchemeBuilder.Register(&Arpscan{}, &ArpscanList{})
 }

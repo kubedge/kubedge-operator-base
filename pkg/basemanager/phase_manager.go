@@ -17,7 +17,7 @@ package basemanager
 import (
 	"context"
 
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 	lcmif "github.com/kubedge/kubedge-operator-base/pkg/services"
 	"k8s.io/apimachinery/pkg/types"
 

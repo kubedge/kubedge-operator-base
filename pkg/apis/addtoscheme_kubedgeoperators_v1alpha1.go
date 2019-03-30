@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
+	"github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 )
 
 func init() {

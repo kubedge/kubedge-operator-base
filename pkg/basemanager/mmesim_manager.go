@@ -17,17 +17,17 @@ package basemanager
 import (
 	"context"
 
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 )
 
 type rollbackmanager struct {
 	phasemanager
 
-	spec   av1.RollbackPhaseSpec
-	status *av1.RollbackPhaseStatus
+	spec   av1.MMESimSpec
+	status *av1.MMESimStatus
 }
 
-// Sync retrieves from K8s the sub resources (Workflow, Job, ....) attached to this RollbackPhase CR
+// Sync retrieves from K8s the sub resources (Workflow, Job, ....) attached to this MMESim CR
 func (m *rollbackmanager) Sync(ctx context.Context) error {
 
 	m.deployedSubResourceList = av1.NewSubResourceList(m.phaseNamespace, m.phaseName)
@@ -49,22 +49,22 @@ func (m *rollbackmanager) Sync(ctx context.Context) error {
 	return nil
 }
 
-// InstallResource creates K8s sub resources (Workflow, Job, ....) attached to this RollbackPhase CR
+// InstallResource creates K8s sub resources (Workflow, Job, ....) attached to this MMESim CR
 func (m rollbackmanager) InstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.installResource(ctx)
 }
 
-// InstallResource updates K8s sub resources (Workflow, Job, ....) attached to this RollbackPhase CR
+// InstallResource updates K8s sub resources (Workflow, Job, ....) attached to this MMESim CR
 func (m rollbackmanager) UpdateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
 	return m.updateResource(ctx)
 }
 
-// ReconcileResource creates or patches resources as necessary to match this RollbackPhase CR
+// ReconcileResource creates or patches resources as necessary to match this MMESim CR
 func (m rollbackmanager) ReconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.reconcileResource(ctx)
 }
 
-// UninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this RollbackPhase CR
+// UninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this MMESim CR
 func (m rollbackmanager) UninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.uninstallResource(ctx)
 }

@@ -9,34 +9,34 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// RollbackPhaseSpec defines the desired state of RollbackPhase
-type RollbackPhaseSpec struct {
+// MMESimSpec defines the desired state of MMESim
+type MMESimSpec struct {
 	PhaseSpec `json:",inline"`
 }
 
-// RollbackPhaseStatus defines the observed state of RollbackPhase
-type RollbackPhaseStatus struct {
+// MMESimStatus defines the observed state of MMESim
+type MMESimStatus struct {
 	PhaseStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// RollbackPhase is the Schema for the openstackdeployments API
+// MMESim is the Schema for the openstackdeployments API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=rollbackphases,shortName=osrbck
+// +kubebuilder:resource:path=mmesims,shortName=osrbck
 // +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
-type RollbackPhase struct {
+type MMESim struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   RollbackPhaseSpec   `json:"spec,omitempty"`
-	Status RollbackPhaseStatus `json:"status,omitempty"`
+	Spec   MMESimSpec   `json:"spec,omitempty"`
+	Status MMESimStatus `json:"status,omitempty"`
 }
 
-// Init is used to initialize an RollbackPhase. Namely, if the state has not been
+// Init is used to initialize an MMESim. Namely, if the state has not been
 // specified, it will be set
-func (obj *RollbackPhase) Init() {
+func (obj *MMESim) Init() {
 	if obj.Status.ActualState == "" {
 		obj.Status.ActualState = StateUninitialied
 	}
@@ -47,17 +47,17 @@ func (obj *RollbackPhase) Init() {
 }
 
 // Return the list of dependent resources to watch
-func (obj *RollbackPhase) GetDependentResources() []unstructured.Unstructured {
+func (obj *MMESim) GetDependentResources() []unstructured.Unstructured {
 	var res = make([]unstructured.Unstructured, 0)
 	return res
 }
 
-// Convert an unstructured.Unstructured into a typed RollbackPhase
-func ToRollbackPhase(u *unstructured.Unstructured) *RollbackPhase {
-	var obj *RollbackPhase
+// Convert an unstructured.Unstructured into a typed MMESim
+func ToMMESim(u *unstructured.Unstructured) *MMESim {
+	var obj *MMESim
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &RollbackPhase{
+		return &MMESim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      u.GetName(),
 				Namespace: u.GetNamespace(),
@@ -67,9 +67,9 @@ func ToRollbackPhase(u *unstructured.Unstructured) *RollbackPhase {
 	return obj
 }
 
-// Convert a typed RollbackPhase into an unstructured.Unstructured
-func (obj *RollbackPhase) FromRollbackPhase() *unstructured.Unstructured {
-	u := NewRollbackPhaseVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
+// Convert a typed MMESim into an unstructured.Unstructured
+func (obj *MMESim) FromMMESim() *unstructured.Unstructured {
+	u := NewMMESimVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -79,24 +79,24 @@ func (obj *RollbackPhase) FromRollbackPhase() *unstructured.Unstructured {
 }
 
 // IsDeleted returns true if the chart group has been deleted
-func (obj *RollbackPhase) IsDeleted() bool {
+func (obj *MMESim) IsDeleted() bool {
 	return obj.GetDeletionTimestamp() != nil
 }
 
 // IsSatisfied returns true if the chart's actual state meets its target state
-func (obj *RollbackPhase) IsSatisfied() bool {
+func (obj *MMESim) IsSatisfied() bool {
 	return obj.Spec.TargetState == obj.Status.ActualState
 }
 
-func (obj *RollbackPhase) GetName() string {
+func (obj *MMESim) GetName() string {
 	return obj.ObjectMeta.Name
 }
 
-// Returns a GKV for RollbackPhase
-func NewRollbackPhaseVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for MMESim
+func NewMMESimVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
-	u.SetAPIVersion("baseoperator.kubedge.cloud/v1alpha1")
-	u.SetKind("RollbackPhase")
+	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
+	u.SetKind("MMESim")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
@@ -104,26 +104,26 @@ func NewRollbackPhaseVersionKind(namespace string, name string) *unstructured.Un
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// RollbackPhaseList contains a list of RollbackPhase
-type RollbackPhaseList struct {
+// MMESimList contains a list of MMESim
+type MMESimList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []RollbackPhase `json:"items"`
+	Items           []MMESim `json:"items"`
 }
 
-// Convert an unstructured.Unstructured into a typed RollbackPhaseList
-func ToRollbackPhaseList(u *unstructured.Unstructured) *RollbackPhaseList {
-	var obj *RollbackPhaseList
+// Convert an unstructured.Unstructured into a typed MMESimList
+func ToMMESimList(u *unstructured.Unstructured) *MMESimList {
+	var obj *MMESimList
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &RollbackPhaseList{}
+		return &MMESimList{}
 	}
 	return obj
 }
 
-// Convert a typed RollbackPhaseList into an unstructured.Unstructured
-func (obj *RollbackPhaseList) FromRollbackPhaseList() *unstructured.Unstructured {
-	u := NewRollbackPhaseListVersionKind("", "")
+// Convert a typed MMESimList into an unstructured.Unstructured
+func (obj *MMESimList) FromMMESimList() *unstructured.Unstructured {
+	u := NewMMESimListVersionKind("", "")
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -133,23 +133,23 @@ func (obj *RollbackPhaseList) FromRollbackPhaseList() *unstructured.Unstructured
 }
 
 // JEB: Not sure yet if we really will need it
-func (obj *RollbackPhaseList) Equivalent(other *RollbackPhaseList) bool {
+func (obj *MMESimList) Equivalent(other *MMESimList) bool {
 	if other == nil {
 		return false
 	}
 	return reflect.DeepEqual(obj.Items, other.Items)
 }
 
-// Returns a GKV for RollbackPhaseList
-func NewRollbackPhaseListVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for MMESimList
+func NewMMESimListVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
-	u.SetAPIVersion("baseoperator.kubedge.cloud/v1alpha1")
-	u.SetKind("RollbackPhaseList")
+	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
+	u.SetKind("MMESimList")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
 }
 
 func init() {
-	SchemeBuilder.Register(&RollbackPhase{}, &RollbackPhaseList{})
+	SchemeBuilder.Register(&MMESim{}, &MMESimList{})
 }

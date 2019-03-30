@@ -17,18 +17,18 @@ package basemanager
 import (
 	"context"
 
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 )
 
-type upgrademanager struct {
+type testmanager struct {
 	phasemanager
 
-	spec   av1.UpgradePhaseSpec
-	status *av1.UpgradePhaseStatus
+	spec   av1.ArpscanSpec
+	status *av1.ArpscanStatus
 }
 
-// Sync retrieves from K8s the sub resources (Workflow, Job, ....) attached to this UpgradePhase CR
-func (m *upgrademanager) Sync(ctx context.Context) error {
+// Sync retrieves from K8s the sub resources (Workflow, Job, ....) attached to this Arpscan CR
+func (m *testmanager) Sync(ctx context.Context) error {
 
 	m.deployedSubResourceList = av1.NewSubResourceList(m.phaseNamespace, m.phaseName)
 
@@ -49,22 +49,22 @@ func (m *upgrademanager) Sync(ctx context.Context) error {
 	return nil
 }
 
-// InstallResource creates K8s sub resources (Workflow, Job, ....) attached to this UpgradePhase CR
-func (m upgrademanager) InstallResource(ctx context.Context) (*av1.SubResourceList, error) {
+// InstallResource creates K8s sub resources (Workflow, Job, ....) attached to this Arpscan CR
+func (m testmanager) InstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.installResource(ctx)
 }
 
-// InstallResource updates K8s sub resources (Workflow, Job, ....) attached to this UpgradePhase CR
-func (m upgrademanager) UpdateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
+// InstallResource updates K8s sub resources (Workflow, Job, ....) attached to this Arpscan CR
+func (m testmanager) UpdateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
 	return m.updateResource(ctx)
 }
 
-// ReconcileResource creates or patches resources as necessary to match this UpgradePhase CR
-func (m upgrademanager) ReconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
+// ReconcileResource creates or patches resources as necessary to match this Arpscan CR
+func (m testmanager) ReconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.reconcileResource(ctx)
 }
 
-// UninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this UpgradePhase CR
-func (m upgrademanager) UninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
+// UninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this Arpscan CR
+func (m testmanager) UninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.uninstallResource(ctx)
 }

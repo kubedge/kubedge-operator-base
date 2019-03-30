@@ -1,3 +1,3 @@
-operator-ohm/baseoperator-operator
+operator-ohm/kubedgeoperator-operator
 ==================================
 

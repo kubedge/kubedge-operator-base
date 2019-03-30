@@ -9,34 +9,34 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// UpgradePhaseSpec defines the desired state of UpgradePhase
-type UpgradePhaseSpec struct {
+// ECDSClusterSpec defines the desired state of ECDSCluster
+type ECDSClusterSpec struct {
 	PhaseSpec `json:",inline"`
 }
 
-// UpgradePhaseStatus defines the observed state of UpgradePhase
-type UpgradePhaseStatus struct {
+// ECDSClusterStatus defines the observed state of ECDSCluster
+type ECDSClusterStatus struct {
 	PhaseStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// UpgradePhase is the Schema for the openstackdeployments API
+// ECDSCluster is the Schema for the openstackdeployments API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=upgradephases,shortName=osupg
+// +kubebuilder:resource:path=ecdsclusters,shortName=osupg
 // +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
-type UpgradePhase struct {
+type ECDSCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   UpgradePhaseSpec   `json:"spec,omitempty"`
-	Status UpgradePhaseStatus `json:"status,omitempty"`
+	Spec   ECDSClusterSpec   `json:"spec,omitempty"`
+	Status ECDSClusterStatus `json:"status,omitempty"`
 }
 
-// Init is used to initialize an UpgradePhase. Namely, if the state has not been
+// Init is used to initialize an ECDSCluster. Namely, if the state has not been
 // specified, it will be set
-func (obj *UpgradePhase) Init() {
+func (obj *ECDSCluster) Init() {
 	if obj.Status.ActualState == "" {
 		obj.Status.ActualState = StateUninitialied
 	}
@@ -47,17 +47,17 @@ func (obj *UpgradePhase) Init() {
 }
 
 // Return the list of dependent resources to watch
-func (obj *UpgradePhase) GetDependentResources() []unstructured.Unstructured {
+func (obj *ECDSCluster) GetDependentResources() []unstructured.Unstructured {
 	var res = make([]unstructured.Unstructured, 0)
 	return res
 }
 
-// Convert an unstructured.Unstructured into a typed UpgradePhase
-func ToUpgradePhase(u *unstructured.Unstructured) *UpgradePhase {
-	var obj *UpgradePhase
+// Convert an unstructured.Unstructured into a typed ECDSCluster
+func ToECDSCluster(u *unstructured.Unstructured) *ECDSCluster {
+	var obj *ECDSCluster
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &UpgradePhase{
+		return &ECDSCluster{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      u.GetName(),
 				Namespace: u.GetNamespace(),
@@ -67,9 +67,9 @@ func ToUpgradePhase(u *unstructured.Unstructured) *UpgradePhase {
 	return obj
 }
 
-// Convert a typed UpgradePhase into an unstructured.Unstructured
-func (obj *UpgradePhase) FromUpgradePhase() *unstructured.Unstructured {
-	u := NewUpgradePhaseVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
+// Convert a typed ECDSCluster into an unstructured.Unstructured
+func (obj *ECDSCluster) FromECDSCluster() *unstructured.Unstructured {
+	u := NewECDSClusterVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -79,24 +79,24 @@ func (obj *UpgradePhase) FromUpgradePhase() *unstructured.Unstructured {
 }
 
 // IsDeleted returns true if the chart group has been deleted
-func (obj *UpgradePhase) IsDeleted() bool {
+func (obj *ECDSCluster) IsDeleted() bool {
 	return obj.GetDeletionTimestamp() != nil
 }
 
 // IsSatisfied returns true if the chart's actual state meets its target state
-func (obj *UpgradePhase) IsSatisfied() bool {
+func (obj *ECDSCluster) IsSatisfied() bool {
 	return obj.Spec.TargetState == obj.Status.ActualState
 }
 
-func (obj *UpgradePhase) GetName() string {
+func (obj *ECDSCluster) GetName() string {
 	return obj.ObjectMeta.Name
 }
 
-// Returns a GKV for UpgradePhase
-func NewUpgradePhaseVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for ECDSCluster
+func NewECDSClusterVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
-	u.SetAPIVersion("baseoperator.kubedge.cloud/v1alpha1")
-	u.SetKind("UpgradePhase")
+	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
+	u.SetKind("ECDSCluster")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
@@ -104,26 +104,26 @@ func NewUpgradePhaseVersionKind(namespace string, name string) *unstructured.Uns
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// UpgradePhaseList contains a list of UpgradePhase
-type UpgradePhaseList struct {
+// ECDSClusterList contains a list of ECDSCluster
+type ECDSClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []UpgradePhase `json:"items"`
+	Items           []ECDSCluster `json:"items"`
 }
 
-// Convert an unstructured.Unstructured into a typed UpgradePhaseList
-func ToUpgradePhaseList(u *unstructured.Unstructured) *UpgradePhaseList {
-	var obj *UpgradePhaseList
+// Convert an unstructured.Unstructured into a typed ECDSClusterList
+func ToECDSClusterList(u *unstructured.Unstructured) *ECDSClusterList {
+	var obj *ECDSClusterList
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &UpgradePhaseList{}
+		return &ECDSClusterList{}
 	}
 	return obj
 }
 
-// Convert a typed UpgradePhaseList into an unstructured.Unstructured
-func (obj *UpgradePhaseList) FromUpgradePhaseList() *unstructured.Unstructured {
-	u := NewUpgradePhaseListVersionKind("", "")
+// Convert a typed ECDSClusterList into an unstructured.Unstructured
+func (obj *ECDSClusterList) FromECDSClusterList() *unstructured.Unstructured {
+	u := NewECDSClusterListVersionKind("", "")
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -133,23 +133,23 @@ func (obj *UpgradePhaseList) FromUpgradePhaseList() *unstructured.Unstructured {
 }
 
 // JEB: Not sure yet if we really will need it
-func (obj *UpgradePhaseList) Equivalent(other *UpgradePhaseList) bool {
+func (obj *ECDSClusterList) Equivalent(other *ECDSClusterList) bool {
 	if other == nil {
 		return false
 	}
 	return reflect.DeepEqual(obj.Items, other.Items)
 }
 
-// Returns a GKV for UpgradePhaseList
-func NewUpgradePhaseListVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for ECDSClusterList
+func NewECDSClusterListVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
-	u.SetAPIVersion("baseoperator.kubedge.cloud/v1alpha1")
-	u.SetKind("UpgradePhaseList")
+	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
+	u.SetKind("ECDSClusterList")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
 }
 
 func init() {
-	SchemeBuilder.Register(&UpgradePhase{}, &UpgradePhaseList{})
+	SchemeBuilder.Register(&ECDSCluster{}, &ECDSClusterList{})
 }

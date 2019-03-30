@@ -4,19 +4,19 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: rollbackphases.baseoperator.kubedge.cloud
+  name: arpscans.kubedgeoperators.kubedge.cloud
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.succeeded
     description: Succeeded
     name: Succeeded
     type: boolean
-  group: baseoperator.kubedge.cloud
+  group: kubedgeoperators.kubedge.cloud
   names:
-    kind: RollbackPhase
-    plural: rollbackphases
+    kind: Arpscan
+    plural: arpscans
     shortNames:
-    - osrbck
+    - ostest
   scope: Namespaced
   subresources:
     status: {}

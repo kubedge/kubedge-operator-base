@@ -1,5 +1,5 @@
-apiVersion: baseoperator.kubedge.cloud/v1alpha1
-kind: UpgradePhase
+apiVersion: kubedgeoperators.kubedge.cloud/v1alpha1
+kind: ECDSCluster
 metadata:
   name: upgrade-phase
 spec:

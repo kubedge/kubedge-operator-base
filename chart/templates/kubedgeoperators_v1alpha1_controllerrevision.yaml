@@ -4,9 +4,9 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: controllerrevisions.baseoperator.kubedge.cloud
+  name: controllerrevisions.kubedgeoperators.kubedge.cloud
 spec:
-  group: baseoperator.kubedge.cloud
+  group: kubedgeoperators.kubedge.cloud
   names:
     kind: ControllerRevision
     plural: controllerrevisions

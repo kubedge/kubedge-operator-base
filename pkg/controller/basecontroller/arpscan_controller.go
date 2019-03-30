@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"reflect"
 
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
-	upgradephasemgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
+	arpscanmgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
 	services "github.com/kubedge/kubedge-operator-base/pkg/services"
 
 	corev1 "k8s.io/api/core/v1"
@@ -37,23 +37,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var upgradephaselog = logf.Log.WithName("upgradephase-controller")
+var arpscanlog = logf.Log.WithName("arpscan-controller")
 
-// AddUpgradePhaseController creates a new UpgradePhase Controller and adds it to
+// AddArpscanController creates a new Arpscan Controller and adds it to
 // the Manager. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
-func AddUpgradePhaseController(mgr manager.Manager) error {
-	return addUpgradePhase(mgr, newUpgradePhaseReconciler(mgr))
+func AddArpscanController(mgr manager.Manager) error {
+	return addArpscan(mgr, newArpscanReconciler(mgr))
 }
 
-// newUpgradePhaseReconciler returns a new reconcile.Reconciler
-func newUpgradePhaseReconciler(mgr manager.Manager) reconcile.Reconciler {
-	r := &UpgradePhaseReconciler{
+// newArpscanReconciler returns a new reconcile.Reconciler
+func newArpscanReconciler(mgr manager.Manager) reconcile.Reconciler {
+	r := &ArpscanReconciler{
 		PhaseReconciler: PhaseReconciler{
 			client:         mgr.GetClient(),
 			scheme:         mgr.GetScheme(),
-			recorder:       mgr.GetRecorder("upgradephase-recorder"),
-			managerFactory: upgradephasemgr.NewManagerFactory(mgr),
+			recorder:       mgr.GetRecorder("arpscan-recorder"),
+			managerFactory: arpscanmgr.NewManagerFactory(mgr),
 			// reconcilePeriod: flags.ReconcilePeriod,
 		},
 	}
@@ -61,18 +61,18 @@ func newUpgradePhaseReconciler(mgr manager.Manager) reconcile.Reconciler {
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
-func addUpgradePhase(mgr manager.Manager, r reconcile.Reconciler) error {
+func addArpscan(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Create a new controller
-	c, err := controller.New("upgradephase-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("arpscan-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource UpgradePhase
+	// Watch for changes to primary resource Arpscan
 	// EnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object
 	// that is the source of the Event. (e.g. the created / deleted / updated objects Name and Namespace).
-	err = c.Watch(&source.Kind{Type: &av1.UpgradePhase{}}, &crthandler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &av1.Arpscan{}}, &crthandler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func addUpgradePhase(mgr manager.Manager, r reconcile.Reconciler) error {
 		// reconciliation. Another reconcile would be redundant.
 		CreateFunc: func(e event.CreateEvent) bool {
 			o := e.Object.(*unstructured.Unstructured)
-			upgradephaselog.Info("CreateEvent. Filtering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			arpscanlog.Info("CreateEvent. Filtering", "resource", o.GetName(), "namespace", o.GetNamespace(),
 				"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
 			return false
 		},
@@ -92,7 +92,7 @@ func addUpgradePhase(mgr manager.Manager, r reconcile.Reconciler) error {
 		// recreated.
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			o := e.Object.(*unstructured.Unstructured)
-			upgradephaselog.Info("DeleteEvent. Triggering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			arpscanlog.Info("DeleteEvent. Triggering", "resource", o.GetName(), "namespace", o.GetNamespace(),
 				"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
 			return true
 		},
@@ -111,25 +111,25 @@ func addUpgradePhase(mgr manager.Manager, r reconcile.Reconciler) error {
 			new.SetResourceVersion("")
 
 			if reflect.DeepEqual(old.Object, new.Object) {
-				upgradephaselog.Info("UpdateEvent. Filtering", "resource", new.GetName(), "namespace", new.GetNamespace(),
+				arpscanlog.Info("UpdateEvent. Filtering", "resource", new.GetName(), "namespace", new.GetNamespace(),
 					"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
 				return false
 			} else {
-				upgradephaselog.Info("UpdateEvent. Triggering", "resource", new.GetName(), "namespace", new.GetNamespace(),
+				arpscanlog.Info("UpdateEvent. Triggering", "resource", new.GetName(), "namespace", new.GetNamespace(),
 					"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
 				return true
 			}
 		},
 	}
 
-	// Watch for changes to secondary resource (described in the yaml files) and requeue the owner UpgradePhase
+	// Watch for changes to secondary resource (described in the yaml files) and requeue the owner Arpscan
 	// EnqueueRequestForOwner enqueues Requests for the Owners of an object. E.g. the object
 	// that created the object that was the source of the Event
-	if racr, isUpgradePhaseReconciler := r.(*UpgradePhaseReconciler); isUpgradePhaseReconciler {
+	if racr, isArpscanReconciler := r.(*ArpscanReconciler); isArpscanReconciler {
 		// The enqueueRequestForOwner is not actually done here since we don't know yet the
 		// content of the yaml files. The tools wait for the yaml files to be parse. The manager
 		// then add the "OwnerReference" to the content of the yaml files. It then invokes the EnqueueRequestForOwner
-		owner := av1.NewUpgradePhaseVersionKind("", "")
+		owner := av1.NewArpscanVersionKind("", "")
 		racr.depResourceWatchUpdater = services.BuildDependentResourceWatchUpdater(mgr, owner, c, dependentPredicate)
 	} else if rrf, isReconcileFunc := r.(*reconcile.Func); isReconcileFunc {
 		// Unit test issue
@@ -139,28 +139,28 @@ func addUpgradePhase(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &UpgradePhaseReconciler{}
+var _ reconcile.Reconciler = &ArpscanReconciler{}
 
-// UpgradePhaseReconciler reconciles custom resources as Argo workflows.
-type UpgradePhaseReconciler struct {
+// ArpscanReconciler reconciles custom resources as Argo workflows.
+type ArpscanReconciler struct {
 	PhaseReconciler
 }
 
 const (
-	finalizerUpgradePhase = "uninstall-upgradephase-resource"
+	finalizerArpscan = "uninstall-arpscan-resource"
 )
 
-// Reconcile reads that state of the cluster for an UpgradePhase object and
-// makes changes based on the state read and what is in the UpgradePhase.Spec
+// Reconcile reads that state of the cluster for an Arpscan object and
+// makes changes based on the state read and what is in the Arpscan.Spec
 //
 // Note: The Controller will requeue the Request to be processed again if the
 // returned error is non-nil or Result.Requeue is true, otherwise upon
 // completion it will remove the work from the queue.
-func (r *UpgradePhaseReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reclog := upgradephaselog.WithValues("namespace", request.Namespace, "upgradephase", request.Name)
+func (r *ArpscanReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	reclog := arpscanlog.WithValues("namespace", request.Namespace, "arpscan", request.Name)
 	reclog.Info("Received a request")
 
-	instance := &av1.UpgradePhase{}
+	instance := &av1.Arpscan{}
 	instance.SetNamespace(request.Namespace)
 	instance.SetName(request.Name)
 
@@ -174,12 +174,12 @@ func (r *UpgradePhaseReconciler) Reconcile(request reconcile.Request) (reconcile
 	}
 
 	if err != nil {
-		reclog.Error(err, "Failed to lookup UpgradePhase")
+		reclog.Error(err, "Failed to lookup Arpscan")
 		return reconcile.Result{}, err
 	}
 
-	mgr := r.managerFactory.NewUpgradePhaseManager(instance)
-	reclog = reclog.WithValues("upgradephase", mgr.ResourceName())
+	mgr := r.managerFactory.NewArpscanManager(instance)
+	reclog = reclog.WithValues("arpscan", mgr.ResourceName())
 
 	var shouldRequeue bool
 	if shouldRequeue, err = r.updateFinalizers(instance); shouldRequeue {
@@ -196,7 +196,7 @@ func (r *UpgradePhaseReconciler) Reconcile(request reconcile.Request) (reconcile
 	}
 
 	if instance.IsDeleted() {
-		if shouldRequeue, err = r.deleteUpgradePhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.deleteArpscan(mgr, instance); shouldRequeue {
 			// Need to requeue because finalizer update does not change metadata.generation
 			return reconcile.Result{Requeue: true}, err
 		}
@@ -221,48 +221,48 @@ func (r *UpgradePhaseReconciler) Reconcile(request reconcile.Request) (reconcile
 
 	switch {
 	case !mgr.IsInstalled():
-		if shouldRequeue, err = r.installUpgradePhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.installArpscan(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 		}
 		return reconcile.Result{}, err
 	case mgr.IsUpdateRequired():
-		if shouldRequeue, err = r.updateUpgradePhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.updateArpscan(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 		}
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileUpgradePhase(mgr, instance); err != nil {
+	if err := r.reconcileArpscan(mgr, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	reclog.Info("Reconciled UpgradePhase")
+	reclog.Info("Reconciled Arpscan")
 	err = r.updateResourceStatus(instance)
 	return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 }
 
 // logAndRecordFailure adds a failure event to the recorder
-func (r UpgradePhaseReconciler) logAndRecordFailure(instance *av1.UpgradePhase, hrc *av1.LcmResourceCondition, err error) {
-	reclog := upgradephaselog.WithValues("namespace", instance.Namespace, "upgradephase", instance.Name)
+func (r ArpscanReconciler) logAndRecordFailure(instance *av1.Arpscan, hrc *av1.LcmResourceCondition, err error) {
+	reclog := arpscanlog.WithValues("namespace", instance.Namespace, "arpscan", instance.Name)
 	reclog.Error(err, fmt.Sprintf("%s. ErrorCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeWarning, hrc.Type.String(), hrc.Reason.String())
 }
 
 // logAndRecordSuccess adds a success event to the recorder
-func (r UpgradePhaseReconciler) logAndRecordSuccess(instance *av1.UpgradePhase, hrc *av1.LcmResourceCondition) {
-	reclog := upgradephaselog.WithValues("namespace", instance.Namespace, "upgradephase", instance.Name)
+func (r ArpscanReconciler) logAndRecordSuccess(instance *av1.Arpscan, hrc *av1.LcmResourceCondition) {
+	reclog := arpscanlog.WithValues("namespace", instance.Namespace, "arpscan", instance.Name)
 	reclog.Info(fmt.Sprintf("%s. SuccessCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeNormal, hrc.Type.String(), hrc.Reason.String())
 }
 
 // updateResource updates the Resource object in the cluster
-func (r UpgradePhaseReconciler) updateResource(instance *av1.UpgradePhase) error {
+func (r ArpscanReconciler) updateResource(instance *av1.Arpscan) error {
 	return r.client.Update(context.TODO(), instance)
 }
 
 // updateResourceStatus updates the the Status field of the Resource object in the cluster
-func (r UpgradePhaseReconciler) updateResourceStatus(instance *av1.UpgradePhase) error {
-	reclog := upgradephaselog.WithValues("namespace", instance.Namespace, "upgradephase", instance.Name)
+func (r ArpscanReconciler) updateResourceStatus(instance *av1.Arpscan) error {
+	reclog := arpscanlog.WithValues("namespace", instance.Namespace, "arpscan", instance.Name)
 
 	helper := av1.LcmResourceConditionListHelper{Items: instance.Status.Conditions}
 	instance.Status.Conditions = helper.InitIfEmpty()
@@ -278,8 +278,8 @@ func (r UpgradePhaseReconciler) updateResourceStatus(instance *av1.UpgradePhase)
 	return err
 }
 
-// ensureSynced checks that the UpgradePhaseManager is in sync with the cluster
-func (r UpgradePhaseReconciler) ensureSynced(mgr services.UpgradePhaseManager, instance *av1.UpgradePhase) error {
+// ensureSynced checks that the ArpscanManager is in sync with the cluster
+func (r ArpscanReconciler) ensureSynced(mgr services.ArpscanManager, instance *av1.Arpscan) error {
 	if err := mgr.Sync(context.TODO()); err != nil {
 		hrc := av1.LcmResourceCondition{
 			Type:    av1.ConditionIrreconcilable,
@@ -299,10 +299,10 @@ func (r UpgradePhaseReconciler) ensureSynced(mgr services.UpgradePhaseManager, i
 // updateFinalizers asserts that the finalizers match what is expected based on
 // whether the instance is currently being deleted or not. It returns true if
 // the finalizers were changed, false otherwise
-func (r UpgradePhaseReconciler) updateFinalizers(instance *av1.UpgradePhase) (bool, error) {
+func (r ArpscanReconciler) updateFinalizers(instance *av1.Arpscan) (bool, error) {
 	pendingFinalizers := instance.GetFinalizers()
-	if !instance.IsDeleted() && !r.contains(pendingFinalizers, finalizerUpgradePhase) {
-		finalizers := append(pendingFinalizers, finalizerUpgradePhase)
+	if !instance.IsDeleted() && !r.contains(pendingFinalizers, finalizerArpscan) {
+		finalizers := append(pendingFinalizers, finalizerArpscan)
 		instance.SetFinalizers(finalizers)
 		err := r.updateResource(instance)
 
@@ -312,7 +312,7 @@ func (r UpgradePhaseReconciler) updateFinalizers(instance *av1.UpgradePhase) (bo
 }
 
 // watchDependentResources updates all resources which are dependent on this one
-func (r UpgradePhaseReconciler) watchDependentResources(resource *av1.SubResourceList) error {
+func (r ArpscanReconciler) watchDependentResources(resource *av1.SubResourceList) error {
 	if r.depResourceWatchUpdater != nil {
 		if err := r.depResourceWatchUpdater(resource.GetDependentResources()); err != nil {
 			return err
@@ -321,14 +321,14 @@ func (r UpgradePhaseReconciler) watchDependentResources(resource *av1.SubResourc
 	return nil
 }
 
-// deleteUpgradePhase deletes an instance of an UpgradePhase. It returns true if the reconciler should be re-enqueueed
-func (r UpgradePhaseReconciler) deleteUpgradePhase(mgr services.UpgradePhaseManager, instance *av1.UpgradePhase) (bool, error) {
-	reclog := upgradephaselog.WithValues("namespace", instance.Namespace, "upgradephase", instance.Name)
+// deleteArpscan deletes an instance of an Arpscan. It returns true if the reconciler should be re-enqueueed
+func (r ArpscanReconciler) deleteArpscan(mgr services.ArpscanManager, instance *av1.Arpscan) (bool, error) {
+	reclog := arpscanlog.WithValues("namespace", instance.Namespace, "arpscan", instance.Name)
 	reclog.Info("Deleting")
 
 	pendingFinalizers := instance.GetFinalizers()
-	if !r.contains(pendingFinalizers, finalizerUpgradePhase) {
-		reclog.Info("UpgradePhase is terminated, skipping reconciliation")
+	if !r.contains(pendingFinalizers, finalizerArpscan) {
+		reclog.Info("Arpscan is terminated, skipping reconciliation")
 		return false, nil
 	}
 
@@ -366,7 +366,7 @@ func (r UpgradePhaseReconciler) deleteUpgradePhase(mgr services.UpgradePhaseMana
 
 	finalizers := []string{}
 	for _, pendingFinalizer := range pendingFinalizers {
-		if pendingFinalizer != finalizerUpgradePhase {
+		if pendingFinalizer != finalizerArpscan {
 			finalizers = append(finalizers, pendingFinalizer)
 		}
 	}
@@ -376,9 +376,9 @@ func (r UpgradePhaseReconciler) deleteUpgradePhase(mgr services.UpgradePhaseMana
 	return true, err
 }
 
-// installUpgradePhase attempts to install instance. It returns true if the reconciler should be re-enqueueed
-func (r UpgradePhaseReconciler) installUpgradePhase(mgr services.UpgradePhaseManager, instance *av1.UpgradePhase) (bool, error) {
-	reclog := upgradephaselog.WithValues("namespace", instance.Namespace, "upgradephase", instance.Name)
+// installArpscan attempts to install instance. It returns true if the reconciler should be re-enqueueed
+func (r ArpscanReconciler) installArpscan(mgr services.ArpscanManager, instance *av1.Arpscan) (bool, error) {
+	reclog := arpscanlog.WithValues("namespace", instance.Namespace, "arpscan", instance.Name)
 	reclog.Info("Installing`")
 
 	installedResource, err := mgr.InstallResource(context.TODO())
@@ -417,9 +417,9 @@ func (r UpgradePhaseReconciler) installUpgradePhase(mgr services.UpgradePhaseMan
 	return true, err
 }
 
-// updateUpgradePhase attempts to update instance. It returns true if the reconciler should be re-enqueueed
-func (r UpgradePhaseReconciler) updateUpgradePhase(mgr services.UpgradePhaseManager, instance *av1.UpgradePhase) (bool, error) {
-	reclog := upgradephaselog.WithValues("namespace", instance.Namespace, "upgradephase", instance.Name)
+// updateArpscan attempts to update instance. It returns true if the reconciler should be re-enqueueed
+func (r ArpscanReconciler) updateArpscan(mgr services.ArpscanManager, instance *av1.Arpscan) (bool, error) {
+	reclog := arpscanlog.WithValues("namespace", instance.Namespace, "arpscan", instance.Name)
 	reclog.Info("Updating`")
 
 	previousResource, updatedResource, err := mgr.UpdateResource(context.TODO())
@@ -462,10 +462,10 @@ func (r UpgradePhaseReconciler) updateUpgradePhase(mgr services.UpgradePhaseMana
 	return true, err
 }
 
-// reconcileUpgradePhase reconciles the yaml files with the cluster
-func (r UpgradePhaseReconciler) reconcileUpgradePhase(mgr services.UpgradePhaseManager, instance *av1.UpgradePhase) error {
-	reclog := upgradephaselog.WithValues("namespace", instance.Namespace, "upgradephase", instance.Name)
-	reclog.Info("Reconciling UpgradePhase and LcmResource")
+// reconcileArpscan reconciles the yaml files with the cluster
+func (r ArpscanReconciler) reconcileArpscan(mgr services.ArpscanManager, instance *av1.Arpscan) error {
+	reclog := arpscanlog.WithValues("namespace", instance.Namespace, "arpscan", instance.Name)
+	reclog.Info("Reconciling Arpscan and LcmResource")
 
 	expectedResource, err := mgr.ReconcileResource(context.TODO())
 	if err != nil {

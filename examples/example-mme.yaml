@@ -1,5 +1,5 @@
-apiVersion: baseoperator.kubedge.cloud/v1alpha1
-kind: RollbackPhase
+apiVersion: kubedgeoperators.kubedge.cloud/v1alpha1
+kind: MMESim
 metadata:
   name: rollback-phase
 spec:

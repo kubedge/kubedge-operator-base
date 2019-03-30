@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"reflect"
 
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
-	rollbackphasemgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
+	ecdsclustermgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
 	services "github.com/kubedge/kubedge-operator-base/pkg/services"
 
 	corev1 "k8s.io/api/core/v1"
@@ -37,23 +37,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var rollbackphaselog = logf.Log.WithName("rollbackphase-controller")
+var ecdsclusterlog = logf.Log.WithName("ecdscluster-controller")
 
-// AddRollbackPhaseController creates a new RollbackPhase Controller and adds it to
+// AddECDSClusterController creates a new ECDSCluster Controller and adds it to
 // the Manager. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
-func AddRollbackPhaseController(mgr manager.Manager) error {
-	return addRollbackPhase(mgr, newRollbackPhaseReconciler(mgr))
+func AddECDSClusterController(mgr manager.Manager) error {
+	return addECDSCluster(mgr, newECDSClusterReconciler(mgr))
 }
 
-// newRollbackPhaseReconciler returns a new reconcile.Reconciler
-func newRollbackPhaseReconciler(mgr manager.Manager) reconcile.Reconciler {
-	r := &RollbackPhaseReconciler{
+// newECDSClusterReconciler returns a new reconcile.Reconciler
+func newECDSClusterReconciler(mgr manager.Manager) reconcile.Reconciler {
+	r := &ECDSClusterReconciler{
 		PhaseReconciler: PhaseReconciler{
 			client:         mgr.GetClient(),
 			scheme:         mgr.GetScheme(),
-			recorder:       mgr.GetRecorder("rollbackphase-recorder"),
-			managerFactory: rollbackphasemgr.NewManagerFactory(mgr),
+			recorder:       mgr.GetRecorder("ecdscluster-recorder"),
+			managerFactory: ecdsclustermgr.NewManagerFactory(mgr),
 			// reconcilePeriod: flags.ReconcilePeriod,
 		},
 	}
@@ -61,18 +61,18 @@ func newRollbackPhaseReconciler(mgr manager.Manager) reconcile.Reconciler {
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
-func addRollbackPhase(mgr manager.Manager, r reconcile.Reconciler) error {
+func addECDSCluster(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Create a new controller
-	c, err := controller.New("rollbackphase-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("ecdscluster-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource RollbackPhase
+	// Watch for changes to primary resource ECDSCluster
 	// EnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object
 	// that is the source of the Event. (e.g. the created / deleted / updated objects Name and Namespace).
-	err = c.Watch(&source.Kind{Type: &av1.RollbackPhase{}}, &crthandler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &av1.ECDSCluster{}}, &crthandler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func addRollbackPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 		// reconciliation. Another reconcile would be redundant.
 		CreateFunc: func(e event.CreateEvent) bool {
 			o := e.Object.(*unstructured.Unstructured)
-			rollbackphaselog.Info("CreateEvent. Filtering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			ecdsclusterlog.Info("CreateEvent. Filtering", "resource", o.GetName(), "namespace", o.GetNamespace(),
 				"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
 			return false
 		},
@@ -92,7 +92,7 @@ func addRollbackPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 		// recreated.
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			o := e.Object.(*unstructured.Unstructured)
-			rollbackphaselog.Info("DeleteEvent. Triggering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			ecdsclusterlog.Info("DeleteEvent. Triggering", "resource", o.GetName(), "namespace", o.GetNamespace(),
 				"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
 			return true
 		},
@@ -111,25 +111,25 @@ func addRollbackPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 			new.SetResourceVersion("")
 
 			if reflect.DeepEqual(old.Object, new.Object) {
-				rollbackphaselog.Info("UpdateEvent. Filtering", "resource", new.GetName(), "namespace", new.GetNamespace(),
+				ecdsclusterlog.Info("UpdateEvent. Filtering", "resource", new.GetName(), "namespace", new.GetNamespace(),
 					"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
 				return false
 			} else {
-				rollbackphaselog.Info("UpdateEvent. Triggering", "resource", new.GetName(), "namespace", new.GetNamespace(),
+				ecdsclusterlog.Info("UpdateEvent. Triggering", "resource", new.GetName(), "namespace", new.GetNamespace(),
 					"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
 				return true
 			}
 		},
 	}
 
-	// Watch for changes to secondary resource (described in the yaml files) and requeue the owner RollbackPhase
+	// Watch for changes to secondary resource (described in the yaml files) and requeue the owner ECDSCluster
 	// EnqueueRequestForOwner enqueues Requests for the Owners of an object. E.g. the object
 	// that created the object that was the source of the Event
-	if racr, isRollbackPhaseReconciler := r.(*RollbackPhaseReconciler); isRollbackPhaseReconciler {
+	if racr, isECDSClusterReconciler := r.(*ECDSClusterReconciler); isECDSClusterReconciler {
 		// The enqueueRequestForOwner is not actually done here since we don't know yet the
 		// content of the yaml files. The tools wait for the yaml files to be parse. The manager
 		// then add the "OwnerReference" to the content of the yaml files. It then invokes the EnqueueRequestForOwner
-		owner := av1.NewRollbackPhaseVersionKind("", "")
+		owner := av1.NewECDSClusterVersionKind("", "")
 		racr.depResourceWatchUpdater = services.BuildDependentResourceWatchUpdater(mgr, owner, c, dependentPredicate)
 	} else if rrf, isReconcileFunc := r.(*reconcile.Func); isReconcileFunc {
 		// Unit test issue
@@ -139,28 +139,28 @@ func addRollbackPhase(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &RollbackPhaseReconciler{}
+var _ reconcile.Reconciler = &ECDSClusterReconciler{}
 
-// RollbackPhaseReconciler reconciles custom resources as Argo workflows.
-type RollbackPhaseReconciler struct {
+// ECDSClusterReconciler reconciles custom resources as Argo workflows.
+type ECDSClusterReconciler struct {
 	PhaseReconciler
 }
 
 const (
-	finalizerRollbackPhase = "uninstall-rollbackphase-resource"
+	finalizerECDSCluster = "uninstall-ecdscluster-resource"
 )
 
-// Reconcile reads that state of the cluster for an RollbackPhase object and
-// makes changes based on the state read and what is in the RollbackPhase.Spec
+// Reconcile reads that state of the cluster for an ECDSCluster object and
+// makes changes based on the state read and what is in the ECDSCluster.Spec
 //
 // Note: The Controller will requeue the Request to be processed again if the
 // returned error is non-nil or Result.Requeue is true, otherwise upon
 // completion it will remove the work from the queue.
-func (r *RollbackPhaseReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reclog := rollbackphaselog.WithValues("namespace", request.Namespace, "rollbackphase", request.Name)
+func (r *ECDSClusterReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	reclog := ecdsclusterlog.WithValues("namespace", request.Namespace, "ecdscluster", request.Name)
 	reclog.Info("Received a request")
 
-	instance := &av1.RollbackPhase{}
+	instance := &av1.ECDSCluster{}
 	instance.SetNamespace(request.Namespace)
 	instance.SetName(request.Name)
 
@@ -174,12 +174,12 @@ func (r *RollbackPhaseReconciler) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	if err != nil {
-		reclog.Error(err, "Failed to lookup RollbackPhase")
+		reclog.Error(err, "Failed to lookup ECDSCluster")
 		return reconcile.Result{}, err
 	}
 
-	mgr := r.managerFactory.NewRollbackPhaseManager(instance)
-	reclog = reclog.WithValues("rollbackphase", mgr.ResourceName())
+	mgr := r.managerFactory.NewECDSClusterManager(instance)
+	reclog = reclog.WithValues("ecdscluster", mgr.ResourceName())
 
 	var shouldRequeue bool
 	if shouldRequeue, err = r.updateFinalizers(instance); shouldRequeue {
@@ -196,7 +196,7 @@ func (r *RollbackPhaseReconciler) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	if instance.IsDeleted() {
-		if shouldRequeue, err = r.deleteRollbackPhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.deleteECDSCluster(mgr, instance); shouldRequeue {
 			// Need to requeue because finalizer update does not change metadata.generation
 			return reconcile.Result{Requeue: true}, err
 		}
@@ -221,48 +221,48 @@ func (r *RollbackPhaseReconciler) Reconcile(request reconcile.Request) (reconcil
 
 	switch {
 	case !mgr.IsInstalled():
-		if shouldRequeue, err = r.installRollbackPhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.installECDSCluster(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 		}
 		return reconcile.Result{}, err
 	case mgr.IsUpdateRequired():
-		if shouldRequeue, err = r.updateRollbackPhase(mgr, instance); shouldRequeue {
+		if shouldRequeue, err = r.updateECDSCluster(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 		}
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileRollbackPhase(mgr, instance); err != nil {
+	if err := r.reconcileECDSCluster(mgr, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	reclog.Info("Reconciled RollbackPhase")
+	reclog.Info("Reconciled ECDSCluster")
 	err = r.updateResourceStatus(instance)
 	return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
 }
 
 // logAndRecordFailure adds a failure event to the recorder
-func (r RollbackPhaseReconciler) logAndRecordFailure(instance *av1.RollbackPhase, hrc *av1.LcmResourceCondition, err error) {
-	reclog := rollbackphaselog.WithValues("namespace", instance.Namespace, "rollbackphase", instance.Name)
+func (r ECDSClusterReconciler) logAndRecordFailure(instance *av1.ECDSCluster, hrc *av1.LcmResourceCondition, err error) {
+	reclog := ecdsclusterlog.WithValues("namespace", instance.Namespace, "ecdscluster", instance.Name)
 	reclog.Error(err, fmt.Sprintf("%s. ErrorCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeWarning, hrc.Type.String(), hrc.Reason.String())
 }
 
 // logAndRecordSuccess adds a success event to the recorder
-func (r RollbackPhaseReconciler) logAndRecordSuccess(instance *av1.RollbackPhase, hrc *av1.LcmResourceCondition) {
-	reclog := rollbackphaselog.WithValues("namespace", instance.Namespace, "rollbackphase", instance.Name)
+func (r ECDSClusterReconciler) logAndRecordSuccess(instance *av1.ECDSCluster, hrc *av1.LcmResourceCondition) {
+	reclog := ecdsclusterlog.WithValues("namespace", instance.Namespace, "ecdscluster", instance.Name)
 	reclog.Info(fmt.Sprintf("%s. SuccessCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeNormal, hrc.Type.String(), hrc.Reason.String())
 }
 
 // updateResource updates the Resource object in the cluster
-func (r RollbackPhaseReconciler) updateResource(instance *av1.RollbackPhase) error {
+func (r ECDSClusterReconciler) updateResource(instance *av1.ECDSCluster) error {
 	return r.client.Update(context.TODO(), instance)
 }
 
 // updateResourceStatus updates the the Status field of the Resource object in the cluster
-func (r RollbackPhaseReconciler) updateResourceStatus(instance *av1.RollbackPhase) error {
-	reclog := rollbackphaselog.WithValues("namespace", instance.Namespace, "rollbackphase", instance.Name)
+func (r ECDSClusterReconciler) updateResourceStatus(instance *av1.ECDSCluster) error {
+	reclog := ecdsclusterlog.WithValues("namespace", instance.Namespace, "ecdscluster", instance.Name)
 
 	helper := av1.LcmResourceConditionListHelper{Items: instance.Status.Conditions}
 	instance.Status.Conditions = helper.InitIfEmpty()
@@ -278,8 +278,8 @@ func (r RollbackPhaseReconciler) updateResourceStatus(instance *av1.RollbackPhas
 	return err
 }
 
-// ensureSynced checks that the RollbackPhaseManager is in sync with the cluster
-func (r RollbackPhaseReconciler) ensureSynced(mgr services.RollbackPhaseManager, instance *av1.RollbackPhase) error {
+// ensureSynced checks that the ECDSClusterManager is in sync with the cluster
+func (r ECDSClusterReconciler) ensureSynced(mgr services.ECDSClusterManager, instance *av1.ECDSCluster) error {
 	if err := mgr.Sync(context.TODO()); err != nil {
 		hrc := av1.LcmResourceCondition{
 			Type:    av1.ConditionIrreconcilable,
@@ -299,10 +299,10 @@ func (r RollbackPhaseReconciler) ensureSynced(mgr services.RollbackPhaseManager,
 // updateFinalizers asserts that the finalizers match what is expected based on
 // whether the instance is currently being deleted or not. It returns true if
 // the finalizers were changed, false otherwise
-func (r RollbackPhaseReconciler) updateFinalizers(instance *av1.RollbackPhase) (bool, error) {
+func (r ECDSClusterReconciler) updateFinalizers(instance *av1.ECDSCluster) (bool, error) {
 	pendingFinalizers := instance.GetFinalizers()
-	if !instance.IsDeleted() && !r.contains(pendingFinalizers, finalizerRollbackPhase) {
-		finalizers := append(pendingFinalizers, finalizerRollbackPhase)
+	if !instance.IsDeleted() && !r.contains(pendingFinalizers, finalizerECDSCluster) {
+		finalizers := append(pendingFinalizers, finalizerECDSCluster)
 		instance.SetFinalizers(finalizers)
 		err := r.updateResource(instance)
 
@@ -312,7 +312,7 @@ func (r RollbackPhaseReconciler) updateFinalizers(instance *av1.RollbackPhase) (
 }
 
 // watchDependentResources updates all resources which are dependent on this one
-func (r RollbackPhaseReconciler) watchDependentResources(resource *av1.SubResourceList) error {
+func (r ECDSClusterReconciler) watchDependentResources(resource *av1.SubResourceList) error {
 	if r.depResourceWatchUpdater != nil {
 		if err := r.depResourceWatchUpdater(resource.GetDependentResources()); err != nil {
 			return err
@@ -321,14 +321,14 @@ func (r RollbackPhaseReconciler) watchDependentResources(resource *av1.SubResour
 	return nil
 }
 
-// deleteRollbackPhase deletes an instance of an RollbackPhase. It returns true if the reconciler should be re-enqueueed
-func (r RollbackPhaseReconciler) deleteRollbackPhase(mgr services.RollbackPhaseManager, instance *av1.RollbackPhase) (bool, error) {
-	reclog := rollbackphaselog.WithValues("namespace", instance.Namespace, "rollbackphase", instance.Name)
+// deleteECDSCluster deletes an instance of an ECDSCluster. It returns true if the reconciler should be re-enqueueed
+func (r ECDSClusterReconciler) deleteECDSCluster(mgr services.ECDSClusterManager, instance *av1.ECDSCluster) (bool, error) {
+	reclog := ecdsclusterlog.WithValues("namespace", instance.Namespace, "ecdscluster", instance.Name)
 	reclog.Info("Deleting")
 
 	pendingFinalizers := instance.GetFinalizers()
-	if !r.contains(pendingFinalizers, finalizerRollbackPhase) {
-		reclog.Info("RollbackPhase is terminated, skipping reconciliation")
+	if !r.contains(pendingFinalizers, finalizerECDSCluster) {
+		reclog.Info("ECDSCluster is terminated, skipping reconciliation")
 		return false, nil
 	}
 
@@ -366,7 +366,7 @@ func (r RollbackPhaseReconciler) deleteRollbackPhase(mgr services.RollbackPhaseM
 
 	finalizers := []string{}
 	for _, pendingFinalizer := range pendingFinalizers {
-		if pendingFinalizer != finalizerRollbackPhase {
+		if pendingFinalizer != finalizerECDSCluster {
 			finalizers = append(finalizers, pendingFinalizer)
 		}
 	}
@@ -376,9 +376,9 @@ func (r RollbackPhaseReconciler) deleteRollbackPhase(mgr services.RollbackPhaseM
 	return true, err
 }
 
-// installRollbackPhase attempts to install instance. It returns true if the reconciler should be re-enqueueed
-func (r RollbackPhaseReconciler) installRollbackPhase(mgr services.RollbackPhaseManager, instance *av1.RollbackPhase) (bool, error) {
-	reclog := rollbackphaselog.WithValues("namespace", instance.Namespace, "rollbackphase", instance.Name)
+// installECDSCluster attempts to install instance. It returns true if the reconciler should be re-enqueueed
+func (r ECDSClusterReconciler) installECDSCluster(mgr services.ECDSClusterManager, instance *av1.ECDSCluster) (bool, error) {
+	reclog := ecdsclusterlog.WithValues("namespace", instance.Namespace, "ecdscluster", instance.Name)
 	reclog.Info("Installing`")
 
 	installedResource, err := mgr.InstallResource(context.TODO())
@@ -417,9 +417,9 @@ func (r RollbackPhaseReconciler) installRollbackPhase(mgr services.RollbackPhase
 	return true, err
 }
 
-// updateRollbackPhase attempts to update instance. It returns true if the reconciler should be re-enqueueed
-func (r RollbackPhaseReconciler) updateRollbackPhase(mgr services.RollbackPhaseManager, instance *av1.RollbackPhase) (bool, error) {
-	reclog := rollbackphaselog.WithValues("namespace", instance.Namespace, "rollbackphase", instance.Name)
+// updateECDSCluster attempts to update instance. It returns true if the reconciler should be re-enqueueed
+func (r ECDSClusterReconciler) updateECDSCluster(mgr services.ECDSClusterManager, instance *av1.ECDSCluster) (bool, error) {
+	reclog := ecdsclusterlog.WithValues("namespace", instance.Namespace, "ecdscluster", instance.Name)
 	reclog.Info("Updating`")
 
 	previousResource, updatedResource, err := mgr.UpdateResource(context.TODO())
@@ -462,10 +462,10 @@ func (r RollbackPhaseReconciler) updateRollbackPhase(mgr services.RollbackPhaseM
 	return true, err
 }
 
-// reconcileRollbackPhase reconciles the yaml files with the cluster
-func (r RollbackPhaseReconciler) reconcileRollbackPhase(mgr services.RollbackPhaseManager, instance *av1.RollbackPhase) error {
-	reclog := rollbackphaselog.WithValues("namespace", instance.Namespace, "rollbackphase", instance.Name)
-	reclog.Info("Reconciling RollbackPhase and LcmResource")
+// reconcileECDSCluster reconciles the yaml files with the cluster
+func (r ECDSClusterReconciler) reconcileECDSCluster(mgr services.ECDSClusterManager, instance *av1.ECDSCluster) error {
+	reclog := ecdsclusterlog.WithValues("namespace", instance.Namespace, "ecdscluster", instance.Name)
+	reclog.Info("Reconciling ECDSCluster and LcmResource")
 
 	expectedResource, err := mgr.ReconcileResource(context.TODO())
 	if err != nil {

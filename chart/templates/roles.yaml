@@ -73,13 +73,13 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - baseoperator.kubedge.cloud
+  - kubedgeoperators.kubedge.cloud
   resources:
-  - rollbackphases
-  - rollbackphases/status
-  - testphases
-  - testphases/status
-  - upgradephases
-  - upgradephases/status
+  - mmesims
+  - mmesims/status
+  - arpscans
+  - arpscans/status
+  - ecdsclusters
+  - ecdsclusters/status
   verbs:
   - '*'

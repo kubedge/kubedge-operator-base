@@ -1,5 +1,5 @@
-apiVersion: baseoperator.kubedge.cloud/v1alpha1
-kind: TestPhase
+apiVersion: kubedgeoperators.kubedge.cloud/v1alpha1
+kind: Arpscan
 metadata:
   name: test-phase
 spec:

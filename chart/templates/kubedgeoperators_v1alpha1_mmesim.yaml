@@ -4,19 +4,19 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: upgradephases.baseoperator.kubedge.cloud
+  name: mmesims.kubedgeoperators.kubedge.cloud
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.succeeded
     description: Succeeded
     name: Succeeded
     type: boolean
-  group: baseoperator.kubedge.cloud
+  group: kubedgeoperators.kubedge.cloud
   names:
-    kind: UpgradePhase
-    plural: upgradephases
+    kind: MMESim
+    plural: mmesims
     shortNames:
-    - osupg
+    - osrbck
   scope: Namespaced
   subresources:
     status: {}

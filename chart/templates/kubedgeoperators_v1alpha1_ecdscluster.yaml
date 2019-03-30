@@ -4,19 +4,19 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: testphases.baseoperator.kubedge.cloud
+  name: ecdsclusters.kubedgeoperators.kubedge.cloud
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.succeeded
     description: Succeeded
     name: Succeeded
     type: boolean
-  group: baseoperator.kubedge.cloud
+  group: kubedgeoperators.kubedge.cloud
   names:
-    kind: TestPhase
-    plural: testphases
+    kind: ECDSCluster
+    plural: ecdsclusters
     shortNames:
-    - ostest
+    - osupg
   scope: Namespaced
   subresources:
     status: {}

@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/baseoperator/v1alpha1"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 	lcmif "github.com/kubedge/kubedge-operator-base/pkg/services"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,8 +48,8 @@ func NewManagerFactory(mgr manager.Manager) lcmif.PhaseManagerFactory {
 	return &managerFactory{kubeClient: mgr.GetClient()}
 }
 
-// NewTestPhaseManager returns a new manager capable of controlling TestPhase phase of the service lifecyle
-func (f managerFactory) NewTestPhaseManager(r *av1.TestPhase) lcmif.TestPhaseManager {
+// NewArpscanManager returns a new manager capable of controlling Arpscan phase of the service lifecyle
+func (f managerFactory) NewArpscanManager(r *av1.Arpscan) lcmif.ArpscanManager {
 	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
 	ownerRefs := []metav1.OwnerReference{
 		*controllerRef,
@@ -71,8 +71,8 @@ func (f managerFactory) NewTestPhaseManager(r *av1.TestPhase) lcmif.TestPhaseMan
 	}
 }
 
-// NewUpgradePhaseManager returns a new manager capable of controlling UpgradePhase phase of the service lifecyle
-func (f managerFactory) NewUpgradePhaseManager(r *av1.UpgradePhase) lcmif.UpgradePhaseManager {
+// NewECDSClusterManager returns a new manager capable of controlling ECDSCluster phase of the service lifecyle
+func (f managerFactory) NewECDSClusterManager(r *av1.ECDSCluster) lcmif.ECDSClusterManager {
 	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
 	ownerRefs := []metav1.OwnerReference{
 		*controllerRef,
@@ -94,8 +94,8 @@ func (f managerFactory) NewUpgradePhaseManager(r *av1.UpgradePhase) lcmif.Upgrad
 	}
 }
 
-// NewRollbackPhaseManager returns a new manager capable of controlling RollbackPhase phase of the service lifecyle
-func (f managerFactory) NewRollbackPhaseManager(r *av1.RollbackPhase) lcmif.RollbackPhaseManager {
+// NewMMESimManager returns a new manager capable of controlling MMESim phase of the service lifecyle
+func (f managerFactory) NewMMESimManager(r *av1.MMESim) lcmif.MMESimManager {
 	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
 	ownerRefs := []metav1.OwnerReference{
 		*controllerRef,
