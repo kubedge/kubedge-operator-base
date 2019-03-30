@@ -18,7 +18,6 @@ import (
 	"context"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
-	lcmif "github.com/kubedge/kubedge-operator-base/pkg/services"
 	"k8s.io/apimachinery/pkg/types"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -111,7 +110,7 @@ func (m phasemanager) installResource(ctx context.Context) (*av1.SubResourceList
 
 	if len(errs) != 0 {
 		if apierrors.IsNotFound(errs[0]) {
-			return m.deployedSubResourceList, lcmif.ErrNotFound
+			return m.deployedSubResourceList, ErrNotFound
 		} else {
 			return m.deployedSubResourceList, errs[0]
 		}
@@ -142,7 +141,7 @@ func (m phasemanager) uninstallResource(ctx context.Context) (*av1.SubResourceLi
 
 	if len(errs) != 0 {
 		if apierrors.IsNotFound(errs[0]) {
-			return nil, lcmif.ErrNotFound
+			return nil, ErrNotFound
 		} else {
 			return nil, errs[0]
 		}

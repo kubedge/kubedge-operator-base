@@ -13,11 +13,9 @@
 # limitations under the License.
 
 apiVersion: v1
-description: OpenStack LCM Operator
-name: kubedgeoperator-operator
+description:  Kubedge Base Operator
+name: kubedge-base-operator
 version: 0.1.0
-home: https://mariadb.com/kb/en/
-icon: http://badges.mariadb.org/mariadb-badge-180x60.png
 sources: null
 maintainers:
-  - name: OpenStack-Helm Authors
+  - name: Kubedge Authors

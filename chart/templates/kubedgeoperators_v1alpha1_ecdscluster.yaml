@@ -78,7 +78,7 @@ spec:
                 service.
               type: string
             targetState:
-              description: Target state of the Lcm Custom Resources
+              description: Target state of the Kubedge Custom Resources
               type: string
           required:
           - source
@@ -92,8 +92,7 @@ spec:
                 server.
               type: string
             conditions:
-              description: 'List of conditions and states related to the resource.
-                JEB: Feature kind of overlap with event recorder'
+              description: List of conditions and states related to the resource.
               items:
                 properties:
                   lastTransitionTime:

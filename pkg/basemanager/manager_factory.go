@@ -19,7 +19,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
-	lcmif "github.com/kubedge/kubedge-operator-base/pkg/services"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,12 +43,12 @@ func initRenderValues(stage av1.OslcPhase) map[string]interface{} {
 }
 
 // NewManagerFactory returns a new factory.
-func NewManagerFactory(mgr manager.Manager) lcmif.PhaseManagerFactory {
+func NewManagerFactory(mgr manager.Manager) KubedgeResourceManagerFactory {
 	return &managerFactory{kubeClient: mgr.GetClient()}
 }
 
 // NewArpscanManager returns a new manager capable of controlling Arpscan phase of the service lifecyle
-func (f managerFactory) NewArpscanManager(r *av1.Arpscan) lcmif.ArpscanManager {
+func (f managerFactory) NewArpscanManager(r *av1.Arpscan) KubedgeResourceManager {
 	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
 	ownerRefs := []metav1.OwnerReference{
 		*controllerRef,
@@ -72,7 +71,7 @@ func (f managerFactory) NewArpscanManager(r *av1.Arpscan) lcmif.ArpscanManager {
 }
 
 // NewECDSClusterManager returns a new manager capable of controlling ECDSCluster phase of the service lifecyle
-func (f managerFactory) NewECDSClusterManager(r *av1.ECDSCluster) lcmif.ECDSClusterManager {
+func (f managerFactory) NewECDSClusterManager(r *av1.ECDSCluster) KubedgeResourceManager {
 	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
 	ownerRefs := []metav1.OwnerReference{
 		*controllerRef,
@@ -95,7 +94,7 @@ func (f managerFactory) NewECDSClusterManager(r *av1.ECDSCluster) lcmif.ECDSClus
 }
 
 // NewMMESimManager returns a new manager capable of controlling MMESim phase of the service lifecyle
-func (f managerFactory) NewMMESimManager(r *av1.MMESim) lcmif.MMESimManager {
+func (f managerFactory) NewMMESimManager(r *av1.MMESim) KubedgeResourceManager {
 	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
 	ownerRefs := []metav1.OwnerReference{
 		*controllerRef,

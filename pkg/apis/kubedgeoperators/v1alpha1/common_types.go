@@ -23,157 +23,157 @@ import (
 )
 
 // Administractive state of the reconcilation of a CRD by the corresponding controller
-type OpenstackLcmAdminState string
+type KubedgeAdminState string
 
 // Describe the Administrative State of the Chart
 const (
 	// StateUnknown indicates that a release/chart/chartgroup/manifest automatic reconcilation by the controller is enabled
-	StateEnabled OpenstackLcmAdminState = "enabled"
+	StateEnabled KubedgeAdminState = "enabled"
 	// StateUnknown indicates that a release/chart/chartgroup/manifest automatic reconcilation by the controller is disabled
-	StateDisabled OpenstackLcmAdminState = "disabled"
+	StateDisabled KubedgeAdminState = "disabled"
 )
 
-// String converts a OpenstackLcmAdminState to a printable string
-func (x OpenstackLcmAdminState) String() string { return string(x) }
+// String converts a KubedgeAdminState to a printable string
+func (x KubedgeAdminState) String() string { return string(x) }
 
-// LcmResourceState is the status of a release/chart/chartgroup/manifest
-type LcmResourceState string
+// KubedgeResourceState is the status of a release/chart/chartgroup/manifest
+type KubedgeResourceState string
 
-type LcmResourceConditionType string
+type KubedgeConditionType string
 
-// LcmResourceConditionStatus represents the current status of a Condition
-type LcmResourceConditionStatus string
+// KubedgeConditionStatus represents the current status of a Condition
+type KubedgeConditionStatus string
 
-type LcmResourceConditionReason string
+type KubedgeConditionReason string
 
-// String converts a LcmResourceState to a printable string
-func (x LcmResourceState) String() string { return string(x) }
+// String converts a KubedgeResourceState to a printable string
+func (x KubedgeResourceState) String() string { return string(x) }
 
-// String converts a LcmResourceConditionType to a printable string
-func (x LcmResourceConditionType) String() string { return string(x) }
+// String converts a KubedgeConditionType to a printable string
+func (x KubedgeConditionType) String() string { return string(x) }
 
-// String converts a LcmResourceConditionState to a printable string
-func (x LcmResourceConditionStatus) String() string { return string(x) }
+// String converts a KubedgeConditionState to a printable string
+func (x KubedgeConditionStatus) String() string { return string(x) }
 
-// String converts a LcmResourceConditionReason to a printable string
-func (x LcmResourceConditionReason) String() string { return string(x) }
+// String converts a KubedgeConditionReason to a printable string
+func (x KubedgeConditionReason) String() string { return string(x) }
 
 // Describe the status of a release
 const (
 	// StateUninitialied indicates that a release/chart/chartgroup/manifest exists, but has not been acted upon
-	StateUninitialied LcmResourceState = "uninitialized"
+	StateUninitialied KubedgeResourceState = "uninitialized"
 	// StateUnknown indicates that a release/chart/chartgroup/manifest is in an uncertain state.
-	StateUnknown LcmResourceState = "unknown"
+	StateUnknown KubedgeResourceState = "unknown"
 	// StateInitialized indicates that a release/chart/chartgroup/manifest is in an Kubernetes
-	StateInitialized LcmResourceState = "initialized"
+	StateInitialized KubedgeResourceState = "initialized"
 	// StateDeployed indicates that the release/chart/chartgroup/manifest has been downloaded from artifact repository
-	StateDownloaded LcmResourceState = "downloaded"
+	StateDownloaded KubedgeResourceState = "downloaded"
 	// StateDeployed indicates that the release/chart/chartgroup/manifest has been pushed to Kubernetes.
-	StateDeployed LcmResourceState = "deployed"
+	StateDeployed KubedgeResourceState = "deployed"
 	// StateUninstalled indicates that a release/chart/chartgroup/manifest has been uninstalled from Kubermetes.
-	StateUninstalled LcmResourceState = "uninstalled"
+	StateUninstalled KubedgeResourceState = "uninstalled"
 	// StateSuperseded indicates that this release/chart/chartgroup/manifest object is outdated and a newer one exists.
-	StateSuperseded LcmResourceState = "superseded"
+	StateSuperseded KubedgeResourceState = "superseded"
 	// StateFailed indicates that the release/chart/chartgroup/manifest was not successfully deployed.
-	StateFailed LcmResourceState = "failed"
+	StateFailed KubedgeResourceState = "failed"
 	// StateUninstalling indicates that a uninstall operation is underway.
-	StateUninstalling LcmResourceState = "uninstalling"
+	StateUninstalling KubedgeResourceState = "uninstalling"
 	// StatePendingInstall indicates that an install operation is underway.
-	StatePendingInstall LcmResourceState = "pending-install"
+	StatePendingInstall KubedgeResourceState = "pending-install"
 	// StatePendingUpgrade indicates that an upgrade operation is underway.
-	StatePendingUpgrade LcmResourceState = "pending-upgrade"
+	StatePendingUpgrade KubedgeResourceState = "pending-upgrade"
 	// StatePendingRollback indicates that an rollback operation is underway.
-	StatePendingRollback LcmResourceState = "pending-rollback"
+	StatePendingRollback KubedgeResourceState = "pending-rollback"
 	// StatePendingBackup indicates that an data backup operation is underway.
-	StatePendingBackup LcmResourceState = "pending-backup"
+	StatePendingBackup KubedgeResourceState = "pending-backup"
 	// StatePendingRestore indicates that an data restore operation is underway.
-	StatePendingRestore LcmResourceState = "pending-restore"
+	StatePendingRestore KubedgeResourceState = "pending-restore"
 	// StatePendingInitialization indicates that an data initialization operation is underway.
-	StatePendingInitialization LcmResourceState = "pending-initialization"
+	StatePendingInitialization KubedgeResourceState = "pending-initialization"
 )
 
-// These represent acceptable values for a LcmResourceConditionStatus
+// These represent acceptable values for a KubedgeConditionStatus
 const (
-	ConditionStatusTrue    LcmResourceConditionStatus = "True"
-	ConditionStatusFalse                              = "False"
-	ConditionStatusUnknown                            = "Unknown"
+	ConditionStatusTrue    KubedgeConditionStatus = "True"
+	ConditionStatusFalse                          = "False"
+	ConditionStatusUnknown                        = "Unknown"
 )
 
-// These represent acceptable values for a LcmResourceConditionType
+// These represent acceptable values for a KubedgeConditionType
 const (
-	ConditionIrreconcilable LcmResourceConditionType = "Irreconcilable"
-	ConditionFailed                                  = "Failed"
-	ConditionInitialized                             = "Initializing"
-	ConditionEnabled                                 = "Enabled"
-	ConditionDownloaded                              = "Downloaded"
-	ConditionDeployed                                = "Deployed"
+	ConditionIrreconcilable KubedgeConditionType = "Irreconcilable"
+	ConditionFailed                              = "Failed"
+	ConditionInitialized                         = "Initializing"
+	ConditionEnabled                             = "Enabled"
+	ConditionDownloaded                          = "Downloaded"
+	ConditionDeployed                            = "Deployed"
 
 	// JEB: Not sure we will ever be able to use those conditions
-	ConditionBackedUp   LcmResourceConditionType = "BackedUp"
-	ConditionRestored                            = "Restored"
-	ConditionUpgraded                            = "Upgraded"
-	ConditionRolledBack                          = "RolledBack"
+	ConditionBackedUp   KubedgeConditionType = "BackedUp"
+	ConditionRestored                        = "Restored"
+	ConditionUpgraded                        = "Upgraded"
+	ConditionRolledBack                      = "RolledBack"
 )
 
 // The following represent the more fine-grained reasons for a given condition
 const (
 	// Successful Conditions Reasons
-	ReasonInstallSuccessful   LcmResourceConditionReason = "InstallSuccessful"
-	ReasonDownloadSuccessful                             = "DownloadSuccessful"
-	ReasonReconcileSuccessful                            = "ReconcileSuccessful"
-	ReasonUninstallSuccessful                            = "UninstallSuccessful"
-	ReasonUpdateSuccessful                               = "UpdateSuccessful"
-	ReasonBackupSuccessful                               = "BackupSuccessful"
-	ReasonRestoreSuccessful                              = "RestoreSuccessful"
-	ReasonUpgradeSuccessful                              = "UpgradeSuccessful"
-	ReasonRollbackSuccessful                             = "RollbackSuccessful"
+	ReasonInstallSuccessful   KubedgeConditionReason = "InstallSuccessful"
+	ReasonDownloadSuccessful                         = "DownloadSuccessful"
+	ReasonReconcileSuccessful                        = "ReconcileSuccessful"
+	ReasonUninstallSuccessful                        = "UninstallSuccessful"
+	ReasonUpdateSuccessful                           = "UpdateSuccessful"
+	ReasonBackupSuccessful                           = "BackupSuccessful"
+	ReasonRestoreSuccessful                          = "RestoreSuccessful"
+	ReasonUpgradeSuccessful                          = "UpgradeSuccessful"
+	ReasonRollbackSuccessful                         = "RollbackSuccessful"
 
 	// Error Condition Reasons
-	ReasonInstallError   LcmResourceConditionReason = "InstallError"
-	ReasonDownloadError                             = "DownloadError"
-	ReasonReconcileError                            = "ReconcileError"
-	ReasonUninstallError                            = "UninstallError"
-	ReasonUpdateError                               = "UpdateError"
-	ReasonBackupError                               = "BackupError"
-	ReasonRestoreError                              = "RestoreError"
-	ReasonUpgradeError                              = "UpgradeError"
-	ReasonRollbackError                             = "RollbackError"
+	ReasonInstallError   KubedgeConditionReason = "InstallError"
+	ReasonDownloadError                         = "DownloadError"
+	ReasonReconcileError                        = "ReconcileError"
+	ReasonUninstallError                        = "UninstallError"
+	ReasonUpdateError                           = "UpdateError"
+	ReasonBackupError                           = "BackupError"
+	ReasonRestoreError                          = "RestoreError"
+	ReasonUpgradeError                          = "UpgradeError"
+	ReasonRollbackError                         = "RollbackError"
 )
 
-// LcmResourceCondition represents one current condition of an Lcm resource
+// KubedgeCondition represents one current condition of an Lcm resource
 // A condition might not show up if it is not happening.
 // For example, if a chart is not deploying, the Deploying condition would not show up.
 // If a chart is deploying and encountered a problem that prevents the deployment,
 // the Deploying condition's status will would be False and communicate the problem back.
-type LcmResourceCondition struct {
-	Type               LcmResourceConditionType   `json:"type"`
-	Status             LcmResourceConditionStatus `json:"status"`
-	Reason             LcmResourceConditionReason `json:"reason,omitempty"`
-	Message            string                     `json:"message,omitempty"`
-	ResourceName       string                     `json:"resourceName,omitempty"`
-	ResourceVersion    int32                      `json:"resourceVersion,omitempty"`
-	LastTransitionTime metav1.Time                `json:"lastTransitionTime,omitempty"`
+type KubedgeCondition struct {
+	Type               KubedgeConditionType   `json:"type"`
+	Status             KubedgeConditionStatus `json:"status"`
+	Reason             KubedgeConditionReason `json:"reason,omitempty"`
+	Message            string                 `json:"message,omitempty"`
+	ResourceName       string                 `json:"resourceName,omitempty"`
+	ResourceVersion    int32                  `json:"resourceVersion,omitempty"`
+	LastTransitionTime metav1.Time            `json:"lastTransitionTime,omitempty"`
 }
 
-type LcmResourceConditionListHelper struct {
-	Items []LcmResourceCondition `json:"items"`
+type KubedgeConditionListHelper struct {
+	Items []KubedgeCondition `json:"items"`
 }
 
-// OpenstackLcmStatus represents the common attributes shared amongst armada resources
-type OpenstackLcmStatus struct {
+// KubedgeStatus represents the common attributes shared amongst armada resources
+type KubedgeStatus struct {
 	// Succeeded indicates if the release's ActualState satisfies its target state
 	Succeeded bool `json:"satisfied"`
 	// Reason indicates the reason for any related failures.
 	Reason string `json:"reason,omitempty"`
-	// Actual state of the Lcm Custom Resources
-	ActualState LcmResourceState `json:"actual_state"`
-	// List of conditions and states related to the resource. JEB: Feature kind of overlap with event recorder
-	Conditions []LcmResourceCondition `json:"conditions,omitempty"`
+	// Actual state of the Kubedge Custom Resources
+	ActualState KubedgeResourceState `json:"actual_state"`
+	// List of conditions and states related to the resource.
+	Conditions []KubedgeCondition `json:"conditions,omitempty"`
 }
 
 // PhaseStatus represents the common attributes shared amongst armada resources
 type PhaseStatus struct {
-	OpenstackLcmStatus `json:",inline"`
+	KubedgeStatus `json:",inline"`
 
 	// OpenstackVersion is the version of the backup openstack server.
 	ActualOpenstackServiceVersion string `json:"actualOpenstackServiceVersion,omitempty"`
@@ -182,10 +182,10 @@ type PhaseStatus struct {
 // SetCondition sets a condition on the status object. If the condition already
 // exists, it will be replaced. SetCondition does not update the resource in
 // the cluster.
-func (s *OpenstackLcmStatus) SetCondition(cond LcmResourceCondition, tgt LcmResourceState) {
+func (s *KubedgeStatus) SetCondition(cond KubedgeCondition, tgt KubedgeResourceState) {
 
 	// Add the condition to the list
-	chelper := LcmResourceConditionListHelper{Items: s.Conditions}
+	chelper := KubedgeConditionListHelper{Items: s.Conditions}
 	s.Conditions = chelper.SetCondition(cond)
 
 	// Recompute the state
@@ -196,7 +196,7 @@ func (s *OpenstackLcmStatus) SetCondition(cond LcmResourceCondition, tgt LcmReso
 // the status object. If the condition is not already present, the returned
 // status object is returned unchanged. RemoveCondition does not update the
 // resource in the cluster.
-func (s *OpenstackLcmStatus) RemoveCondition(conditionType LcmResourceConditionType) {
+func (s *KubedgeStatus) RemoveCondition(conditionType KubedgeConditionType) {
 	for i, cond := range s.Conditions {
 		if cond.Type == conditionType {
 			s.Conditions = append(s.Conditions[:i], s.Conditions[i+1:]...)
@@ -208,11 +208,11 @@ func (s *OpenstackLcmStatus) RemoveCondition(conditionType LcmResourceConditionT
 // SetCondition sets a condition on the status object. If the condition already
 // exists, it will be replaced. SetCondition does not update the resource in
 // the cluster.
-func (s *LcmResourceConditionListHelper) SetCondition(condition LcmResourceCondition) []LcmResourceCondition {
+func (s *KubedgeConditionListHelper) SetCondition(condition KubedgeCondition) []KubedgeCondition {
 
 	// Initialize the Items array if needed
 	if s.Items == nil {
-		s.Items = make([]LcmResourceCondition, 0)
+		s.Items = make([]KubedgeCondition, 0)
 	}
 
 	now := metav1.Now()
@@ -239,11 +239,11 @@ func (s *LcmResourceConditionListHelper) SetCondition(condition LcmResourceCondi
 // the status object. If the condition is not already present, the returned
 // status object is returned unchanged. RemoveCondition does not update the
 // resource in the cluster.
-func (s *LcmResourceConditionListHelper) RemoveCondition(conditionType LcmResourceConditionType) []LcmResourceCondition {
+func (s *KubedgeConditionListHelper) RemoveCondition(conditionType KubedgeConditionType) []KubedgeCondition {
 
 	// Initialize the Items array if needed
 	if s.Items == nil {
-		s.Items = make([]LcmResourceCondition, 0)
+		s.Items = make([]KubedgeCondition, 0)
 	}
 
 	for i := range s.Items {
@@ -255,27 +255,27 @@ func (s *LcmResourceConditionListHelper) RemoveCondition(conditionType LcmResour
 	return s.Items
 }
 
-// Initialize the LcmResourceCondition list
-func (s *LcmResourceConditionListHelper) InitIfEmpty() []LcmResourceCondition {
+// Initialize the KubedgeCondition list
+func (s *KubedgeConditionListHelper) InitIfEmpty() []KubedgeCondition {
 
 	// Initialize the Items array if needed
 	if s.Items == nil {
-		s.Items = make([]LcmResourceCondition, 0)
+		s.Items = make([]KubedgeCondition, 0)
 	}
 
 	return s.Items
 }
 
-// Utility function to print an LcmResourceCondition list
-func (s *LcmResourceConditionListHelper) PrettyPrint() string {
+// Utility function to print an KubedgeCondition list
+func (s *KubedgeConditionListHelper) PrettyPrint() string {
 	// res, _ := json.MarshalIndent(s.Items, "", "\t")
 	res, _ := yaml.Marshal(s.Items)
 	return string(res)
 }
 
-// Utility function to find an LcmResourceCondition within the List
-func (s *LcmResourceConditionListHelper) FindCondition(conditionType LcmResourceConditionType, conditionStatus LcmResourceConditionStatus) *LcmResourceCondition {
-	var found *LcmResourceCondition
+// Utility function to find an KubedgeCondition within the List
+func (s *KubedgeConditionListHelper) FindCondition(conditionType KubedgeConditionType, conditionStatus KubedgeConditionStatus) *KubedgeCondition {
+	var found *KubedgeCondition
 	for _, condition := range s.Items {
 		if condition.Type == conditionType && condition.Status == conditionStatus {
 			found = &condition
@@ -285,7 +285,7 @@ func (s *LcmResourceConditionListHelper) FindCondition(conditionType LcmResource
 	return found
 }
 
-func (s *OpenstackLcmStatus) ComputeActualState(cond LcmResourceCondition, target LcmResourceState) {
+func (s *KubedgeStatus) ComputeActualState(cond KubedgeCondition, target KubedgeResourceState) {
 	// TODO(Ian): finish this
 	if cond.Status == ConditionStatusTrue {
 		if cond.Type == ConditionInitialized {
@@ -358,8 +358,8 @@ type PhaseSpec struct {
 
 	// OpenstackServiceVersion is the version of the openstack service.
 	TargetOpenstackServiceVersion string `json:"targetOpenstackServiceVersion,omitempty"`
-	// Target state of the Lcm Custom Resources
-	TargetState LcmResourceState `json:"targetState"`
+	// Target state of the Kubedge Custom Resources
+	TargetState KubedgeResourceState `json:"targetState"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

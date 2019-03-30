@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package services
+package basemanager
 
 import (
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 )
 
 // ManagerFactory creates Managers that are specific to custom resources.
-type PhaseManagerFactory interface {
-	NewArpscanManager(r *av1.Arpscan) ArpscanManager
-	NewECDSClusterManager(r *av1.ECDSCluster) ECDSClusterManager
-	NewMMESimManager(r *av1.MMESim) MMESimManager
+type KubedgeResourceManagerFactory interface {
+	NewArpscanManager(r *av1.Arpscan) KubedgeResourceManager
+	NewECDSClusterManager(r *av1.ECDSCluster) KubedgeResourceManager
+	NewMMESimManager(r *av1.MMESim) KubedgeResourceManager
 }

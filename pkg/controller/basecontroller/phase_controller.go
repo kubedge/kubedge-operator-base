@@ -17,7 +17,7 @@ package basecontroller
 import (
 	"time"
 
-	services "github.com/kubedge/kubedge-operator-base/pkg/services"
+	mgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -31,9 +31,9 @@ type PhaseReconciler struct {
 	client                  client.Client
 	scheme                  *runtime.Scheme
 	recorder                record.EventRecorder
-	managerFactory          services.PhaseManagerFactory
+	managerFactory          mgr.KubedgeResourceManagerFactory
 	reconcilePeriod         time.Duration
-	depResourceWatchUpdater services.DependentResourceWatchUpdater
+	depResourceWatchUpdater mgr.DependentResourceWatchUpdater
 }
 
 func (r *PhaseReconciler) contains(slice []string, s string) bool {

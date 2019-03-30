@@ -20,8 +20,7 @@ import (
 	"reflect"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
-	mmesimmgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
-	services "github.com/kubedge/kubedge-operator-base/pkg/services"
+	bmgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -53,7 +52,7 @@ func newMMESimReconciler(mgr manager.Manager) reconcile.Reconciler {
 			client:         mgr.GetClient(),
 			scheme:         mgr.GetScheme(),
 			recorder:       mgr.GetRecorder("mmesim-recorder"),
-			managerFactory: mmesimmgr.NewManagerFactory(mgr),
+			managerFactory: bmgr.NewManagerFactory(mgr),
 			// reconcilePeriod: flags.ReconcilePeriod,
 		},
 	}
@@ -130,7 +129,7 @@ func addMMESim(mgr manager.Manager, r reconcile.Reconciler) error {
 		// content of the yaml files. The tools wait for the yaml files to be parse. The manager
 		// then add the "OwnerReference" to the content of the yaml files. It then invokes the EnqueueRequestForOwner
 		owner := av1.NewMMESimVersionKind("", "")
-		racr.depResourceWatchUpdater = services.BuildDependentResourceWatchUpdater(mgr, owner, c, dependentPredicate)
+		racr.depResourceWatchUpdater = bmgr.BuildDependentResourceWatchUpdater(mgr, owner, c, dependentPredicate)
 	} else if rrf, isReconcileFunc := r.(*reconcile.Func); isReconcileFunc {
 		// Unit test issue
 		log.Info("UnitTests", "ReconfileFunc", rrf)
@@ -213,7 +212,7 @@ func (r *MMESimReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	hrc := av1.LcmResourceCondition{
+	hrc := av1.KubedgeCondition{
 		Type:   av1.ConditionInitialized,
 		Status: av1.ConditionStatusTrue,
 	}
@@ -242,14 +241,14 @@ func (r *MMESimReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 }
 
 // logAndRecordFailure adds a failure event to the recorder
-func (r MMESimReconciler) logAndRecordFailure(instance *av1.MMESim, hrc *av1.LcmResourceCondition, err error) {
+func (r MMESimReconciler) logAndRecordFailure(instance *av1.MMESim, hrc *av1.KubedgeCondition, err error) {
 	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Error(err, fmt.Sprintf("%s. ErrorCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeWarning, hrc.Type.String(), hrc.Reason.String())
 }
 
 // logAndRecordSuccess adds a success event to the recorder
-func (r MMESimReconciler) logAndRecordSuccess(instance *av1.MMESim, hrc *av1.LcmResourceCondition) {
+func (r MMESimReconciler) logAndRecordSuccess(instance *av1.MMESim, hrc *av1.KubedgeCondition) {
 	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info(fmt.Sprintf("%s. SuccessCondition", hrc.Type.String()))
 	r.recorder.Event(instance, corev1.EventTypeNormal, hrc.Type.String(), hrc.Reason.String())
@@ -264,7 +263,7 @@ func (r MMESimReconciler) updateResource(instance *av1.MMESim) error {
 func (r MMESimReconciler) updateResourceStatus(instance *av1.MMESim) error {
 	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 
-	helper := av1.LcmResourceConditionListHelper{Items: instance.Status.Conditions}
+	helper := av1.KubedgeConditionListHelper{Items: instance.Status.Conditions}
 	instance.Status.Conditions = helper.InitIfEmpty()
 
 	// JEB: Be sure to have update status subresources in the CRD.yaml
@@ -278,10 +277,10 @@ func (r MMESimReconciler) updateResourceStatus(instance *av1.MMESim) error {
 	return err
 }
 
-// ensureSynced checks that the MMESimManager is in sync with the cluster
-func (r MMESimReconciler) ensureSynced(mgr services.MMESimManager, instance *av1.MMESim) error {
+// ensureSynced checks that the KubedgeResourceManager is in sync with the cluster
+func (r MMESimReconciler) ensureSynced(mgr bmgr.KubedgeResourceManager, instance *av1.MMESim) error {
 	if err := mgr.Sync(context.TODO()); err != nil {
-		hrc := av1.LcmResourceCondition{
+		hrc := av1.KubedgeCondition{
 			Type:    av1.ConditionIrreconcilable,
 			Status:  av1.ConditionStatusTrue,
 			Reason:  av1.ReasonReconcileError,
@@ -322,7 +321,7 @@ func (r MMESimReconciler) watchDependentResources(resource *av1.SubResourceList)
 }
 
 // deleteMMESim deletes an instance of an MMESim. It returns true if the reconciler should be re-enqueueed
-func (r MMESimReconciler) deleteMMESim(mgr services.MMESimManager, instance *av1.MMESim) (bool, error) {
+func (r MMESimReconciler) deleteMMESim(mgr bmgr.KubedgeResourceManager, instance *av1.MMESim) (bool, error) {
 	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info("Deleting")
 
@@ -333,8 +332,8 @@ func (r MMESimReconciler) deleteMMESim(mgr services.MMESimManager, instance *av1
 	}
 
 	uninstalledResource, err := mgr.UninstallResource(context.TODO())
-	if err != nil && err != services.ErrNotFound {
-		hrc := av1.LcmResourceCondition{
+	if err != nil && err != bmgr.ErrNotFound {
+		hrc := av1.KubedgeCondition{
 			Type:         av1.ConditionFailed,
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonUninstallError,
@@ -349,10 +348,10 @@ func (r MMESimReconciler) deleteMMESim(mgr services.MMESimManager, instance *av1
 	}
 	instance.Status.RemoveCondition(av1.ConditionFailed)
 
-	if err == services.ErrNotFound {
+	if err == bmgr.ErrNotFound {
 		reclog.Info("Resource already uninstalled, Removing finalizer")
 	} else {
-		hrc := av1.LcmResourceCondition{
+		hrc := av1.KubedgeCondition{
 			Type:   av1.ConditionDeployed,
 			Status: av1.ConditionStatusFalse,
 			Reason: av1.ReasonUninstallSuccessful,
@@ -377,13 +376,13 @@ func (r MMESimReconciler) deleteMMESim(mgr services.MMESimManager, instance *av1
 }
 
 // installMMESim attempts to install instance. It returns true if the reconciler should be re-enqueueed
-func (r MMESimReconciler) installMMESim(mgr services.MMESimManager, instance *av1.MMESim) (bool, error) {
+func (r MMESimReconciler) installMMESim(mgr bmgr.KubedgeResourceManager, instance *av1.MMESim) (bool, error) {
 	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info("Installing`")
 
 	installedResource, err := mgr.InstallResource(context.TODO())
 	if err != nil {
-		hrc := av1.LcmResourceCondition{
+		hrc := av1.KubedgeCondition{
 			Type:    av1.ConditionFailed,
 			Status:  av1.ConditionStatusTrue,
 			Reason:  av1.ReasonInstallError,
@@ -402,7 +401,7 @@ func (r MMESimReconciler) installMMESim(mgr services.MMESimManager, instance *av
 		return false, err
 	}
 
-	hrc := av1.LcmResourceCondition{
+	hrc := av1.KubedgeCondition{
 		Type:            av1.ConditionDeployed,
 		Status:          av1.ConditionStatusTrue,
 		Reason:          av1.ReasonInstallSuccessful,
@@ -418,7 +417,7 @@ func (r MMESimReconciler) installMMESim(mgr services.MMESimManager, instance *av
 }
 
 // updateMMESim attempts to update instance. It returns true if the reconciler should be re-enqueueed
-func (r MMESimReconciler) updateMMESim(mgr services.MMESimManager, instance *av1.MMESim) (bool, error) {
+func (r MMESimReconciler) updateMMESim(mgr bmgr.KubedgeResourceManager, instance *av1.MMESim) (bool, error) {
 	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
 	reclog.Info("Updating`")
 
@@ -427,7 +426,7 @@ func (r MMESimReconciler) updateMMESim(mgr services.MMESimManager, instance *av1
 		reclog.Info("UpdateResource", "Previous", previousResource.GetName(), "Updated", updatedResource.GetName())
 	}
 	if err != nil {
-		hrc := av1.LcmResourceCondition{
+		hrc := av1.KubedgeCondition{
 			Type:         av1.ConditionFailed,
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonUpdateError,
@@ -447,7 +446,7 @@ func (r MMESimReconciler) updateMMESim(mgr services.MMESimManager, instance *av1
 		return false, err
 	}
 
-	hrc := av1.LcmResourceCondition{
+	hrc := av1.KubedgeCondition{
 		Type:            av1.ConditionDeployed,
 		Status:          av1.ConditionStatusTrue,
 		Reason:          av1.ReasonUpdateSuccessful,
@@ -463,13 +462,13 @@ func (r MMESimReconciler) updateMMESim(mgr services.MMESimManager, instance *av1
 }
 
 // reconcileMMESim reconciles the yaml files with the cluster
-func (r MMESimReconciler) reconcileMMESim(mgr services.MMESimManager, instance *av1.MMESim) error {
+func (r MMESimReconciler) reconcileMMESim(mgr bmgr.KubedgeResourceManager, instance *av1.MMESim) error {
 	reclog := mmesimlog.WithValues("namespace", instance.Namespace, "mmesim", instance.Name)
-	reclog.Info("Reconciling MMESim and LcmResource")
+	reclog.Info("Reconciling MMESim")
 
 	expectedResource, err := mgr.ReconcileResource(context.TODO())
 	if err != nil {
-		hrc := av1.LcmResourceCondition{
+		hrc := av1.KubedgeCondition{
 			Type:         av1.ConditionIrreconcilable,
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonReconcileError,

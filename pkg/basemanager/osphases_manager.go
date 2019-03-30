@@ -12,13 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package services
+package basemanager
 
 import (
-	"errors"
+	"context"
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 )
 
-var (
-	// ErrNotFound indicates the release was not found.
-	ErrNotFound = errors.New("release not found")
-)
+// KubedgeResourceManager
+type KubedgeResourceManager interface {
+	ResourceName() string
+	IsInstalled() bool
+	IsUpdateRequired() bool
+	Sync(context.Context) error
+	InstallResource(context.Context) (*av1.SubResourceList, error)
+	UpdateResource(context.Context) (*av1.SubResourceList, *av1.SubResourceList, error)
+	ReconcileResource(context.Context) (*av1.SubResourceList, error)
+	UninstallResource(context.Context) (*av1.SubResourceList, error)
+}
