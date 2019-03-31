@@ -19,8 +19,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type managerFactory struct {
@@ -49,69 +47,15 @@ func NewManagerFactory(mgr manager.Manager) KubedgeResourceManagerFactory {
 
 // NewArpscanManager returns a new manager capable of controlling Arpscan phase of the service lifecyle
 func (f managerFactory) NewArpscanManager(r *av1.Arpscan) KubedgeResourceManager {
-	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
-	ownerRefs := []metav1.OwnerReference{
-		*controllerRef,
-	}
-
-	renderFiles := initRenderFiles(av1.PhaseTest)
-	renderValues := initRenderValues(av1.PhaseTest)
-
-	return &testmanager{
-		phasemanager: phasemanager{
-			kubeClient:     f.kubeClient,
-			renderer:       NewOwnerRefRenderer(ownerRefs, "ostest", renderFiles, renderValues),
-			source:         r.Spec.Source,
-			phaseName:      r.GetName(),
-			phaseNamespace: r.GetNamespace()},
-
-		spec:   r.Spec,
-		status: &r.Status,
-	}
+	return nil
 }
 
 // NewECDSClusterManager returns a new manager capable of controlling ECDSCluster phase of the service lifecyle
 func (f managerFactory) NewECDSClusterManager(r *av1.ECDSCluster) KubedgeResourceManager {
-	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
-	ownerRefs := []metav1.OwnerReference{
-		*controllerRef,
-	}
-
-	renderFiles := initRenderFiles(av1.PhaseUpgrade)
-	renderValues := initRenderValues(av1.PhaseUpgrade)
-
-	return &upgrademanager{
-		phasemanager: phasemanager{
-			kubeClient:     f.kubeClient,
-			renderer:       NewOwnerRefRenderer(ownerRefs, "osupg", renderFiles, renderValues),
-			source:         r.Spec.Source,
-			phaseName:      r.GetName(),
-			phaseNamespace: r.GetNamespace()},
-
-		spec:   r.Spec,
-		status: &r.Status,
-	}
+	return nil
 }
 
 // NewMMESimManager returns a new manager capable of controlling MMESim phase of the service lifecyle
 func (f managerFactory) NewMMESimManager(r *av1.MMESim) KubedgeResourceManager {
-	controllerRef := metav1.NewControllerRef(r, r.GroupVersionKind())
-	ownerRefs := []metav1.OwnerReference{
-		*controllerRef,
-	}
-
-	renderFiles := initRenderFiles(av1.PhaseRollback)
-	renderValues := initRenderValues(av1.PhaseRollback)
-
-	return &rollbackmanager{
-		phasemanager: phasemanager{
-			kubeClient:     f.kubeClient,
-			renderer:       NewOwnerRefRenderer(ownerRefs, "osrbck", renderFiles, renderValues),
-			source:         r.Spec.Source,
-			phaseName:      r.GetName(),
-			phaseNamespace: r.GetNamespace()},
-
-		spec:   r.Spec,
-		status: &r.Status,
-	}
+	return nil
 }
