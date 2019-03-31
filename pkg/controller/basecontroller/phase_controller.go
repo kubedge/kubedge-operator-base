@@ -28,12 +28,12 @@ import (
 
 // PhaseReconciler reconciles custom resources as Workflow, Jobs....
 type PhaseReconciler struct {
-	client                  client.Client
-	scheme                  *runtime.Scheme
-	recorder                record.EventRecorder
-	managerFactory          mgr.KubedgeResourceManagerFactory
-	reconcilePeriod         time.Duration
-	depResourceWatchUpdater mgr.DependentResourceWatchUpdater
+	Client                  client.Client
+	Scheme                  *runtime.Scheme
+	Recorder                record.EventRecorder
+	ManagerFactory          mgr.KubedgeResourceManagerFactory
+	ReconcilePeriod         time.Duration
+	DepResourceWatchUpdater mgr.DependentResourceWatchUpdater
 }
 
 func (r *PhaseReconciler) contains(slice []string, s string) bool {

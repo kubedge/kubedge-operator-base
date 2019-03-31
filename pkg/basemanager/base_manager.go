@@ -26,11 +26,11 @@ import (
 )
 
 type KubedgeBaseManager struct {
-	kubeClient     client.Client
-	renderer       *OwnerRefRenderer
-	phaseName      string
-	phaseNamespace string
-	source         *av1.PhaseSource
+	KubeClient     client.Client
+	Renderer       *OwnerRefRenderer
+	PhaseName      string
+	PhaseNamespace string
+	Source         *av1.PhaseSource
 
 	isInstalled             bool
 	isUpdateRequired        bool
@@ -39,7 +39,7 @@ type KubedgeBaseManager struct {
 
 // ResourceName returns the name of the release.
 func (m KubedgeBaseManager) ResourceName() string {
-	return m.phaseName
+	return m.PhaseName
 }
 
 func (m KubedgeBaseManager) IsInstalled() bool {
@@ -52,12 +52,12 @@ func (m KubedgeBaseManager) IsUpdateRequired() bool {
 
 // Render a chart or just a file
 func (m KubedgeBaseManager) render(ctx context.Context) (*av1.SubResourceList, error) {
-	return m.renderer.RenderFile(m.phaseName, m.phaseNamespace, m.source.Location)
+	return m.Renderer.RenderFile(m.PhaseName, m.PhaseNamespace, m.Source.Location)
 }
 
 // Attempts to compare the K8s object present with the rendered objects
 func (m KubedgeBaseManager) sync(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
-	deployed := av1.NewSubResourceList(m.phaseNamespace, m.phaseName)
+	deployed := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
 
 	rendered, err := m.render(ctx)
 	if err != nil {
@@ -73,7 +73,7 @@ func (m KubedgeBaseManager) sync(ctx context.Context) (*av1.SubResourceList, *av
 		existingResource.SetName(renderedResource.GetName())
 		existingResource.SetNamespace(renderedResource.GetNamespace())
 
-		err := m.kubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
+		err := m.KubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				// Don't want to trace is the error is not a NotFound.
@@ -98,7 +98,7 @@ func (m KubedgeBaseManager) installResource(ctx context.Context) (*av1.SubResour
 
 	errs := make([]error, 0)
 	for _, toCreate := range rendered.Items {
-		err := m.kubeClient.Create(context.TODO(), &toCreate)
+		err := m.KubeClient.Create(context.TODO(), &toCreate)
 		if err != nil {
 			log.Error(err, "Can't not Create Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName())
 			errs = append(errs, err)
@@ -132,7 +132,7 @@ func (m KubedgeBaseManager) reconcileResource(ctx context.Context) (*av1.SubReso
 func (m KubedgeBaseManager) uninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	errs := make([]error, 0)
 	for _, toDelete := range m.deployedSubResourceList.Items {
-		err := m.kubeClient.Delete(context.TODO(), &toDelete)
+		err := m.KubeClient.Delete(context.TODO(), &toDelete)
 		if err != nil {
 			log.Error(err, "Can't not Delete Resource")
 			errs = append(errs, err)
