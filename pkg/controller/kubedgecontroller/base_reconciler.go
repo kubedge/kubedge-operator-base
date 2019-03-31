@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package basecontroller
+package kubedgecontroller
 
 import (
 	"time"
 
-	mgr "github.com/kubedge/kubedge-operator-base/pkg/basemanager"
+	mgr "github.com/kubedge/kubedge-operator-base/pkg/kubedgemanager"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -26,8 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// PhaseReconciler reconciles custom resources as Workflow, Jobs....
-type PhaseReconciler struct {
+// KubedgeBaseReconciler reconciles custom resources as Workflow, Jobs....
+type KubedgeBaseReconciler struct {
 	Client                  client.Client
 	Scheme                  *runtime.Scheme
 	Recorder                record.EventRecorder
@@ -36,7 +36,7 @@ type PhaseReconciler struct {
 	DepResourceWatchUpdater mgr.DependentResourceWatchUpdater
 }
 
-func (r *PhaseReconciler) contains(slice []string, s string) bool {
+func (r *KubedgeBaseReconciler) Contains(slice []string, s string) bool {
 	for _, item := range slice {
 		if item == s {
 			return true

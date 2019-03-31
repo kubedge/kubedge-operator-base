@@ -25,6 +25,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// KubedgeResourceManager
+type KubedgeResourceManager interface {
+	ResourceName() string
+	IsInstalled() bool
+	IsUpdateRequired() bool
+	Sync(context.Context) error
+	InstallResource(context.Context) (*av1.SubResourceList, error)
+	UpdateResource(context.Context) (*av1.SubResourceList, *av1.SubResourceList, error)
+	ReconcileResource(context.Context) (*av1.SubResourceList, error)
+	UninstallResource(context.Context) (*av1.SubResourceList, error)
+}
+
+// Default implementation of KubedgeResourceManager
 type KubedgeBaseManager struct {
 	KubeClient     client.Client
 	Renderer       *OwnerRefRenderer
@@ -34,7 +47,7 @@ type KubedgeBaseManager struct {
 
 	isInstalled             bool
 	isUpdateRequired        bool
-	deployedSubResourceList *av1.SubResourceList
+	DeployedSubResourceList *av1.SubResourceList
 }
 
 // ResourceName returns the name of the release.
@@ -93,7 +106,7 @@ func (m KubedgeBaseManager) installResource(ctx context.Context) (*av1.SubResour
 
 	rendered, err := m.render(ctx)
 	if err != nil {
-		return m.deployedSubResourceList, err
+		return m.DeployedSubResourceList, err
 	}
 
 	errs := make([]error, 0)
@@ -104,34 +117,34 @@ func (m KubedgeBaseManager) installResource(ctx context.Context) (*av1.SubResour
 			errs = append(errs, err)
 		} else {
 			log.Info("Created Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName())
-			m.deployedSubResourceList.Items = append(m.deployedSubResourceList.Items, toCreate)
+			m.DeployedSubResourceList.Items = append(m.DeployedSubResourceList.Items, toCreate)
 		}
 	}
 
 	if len(errs) != 0 {
 		if apierrors.IsNotFound(errs[0]) {
-			return m.deployedSubResourceList, ErrNotFound
+			return m.DeployedSubResourceList, ErrNotFound
 		} else {
-			return m.deployedSubResourceList, errs[0]
+			return m.DeployedSubResourceList, errs[0]
 		}
 	}
-	return m.deployedSubResourceList, nil
+	return m.DeployedSubResourceList, nil
 }
 
 // InstallResource updates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
 func (m KubedgeBaseManager) updateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
-	return m.deployedSubResourceList, &av1.SubResourceList{}, nil
+	return m.DeployedSubResourceList, &av1.SubResourceList{}, nil
 }
 
 // ReconcileResource creates or patches resources as necessary to match this Phase CR
 func (m KubedgeBaseManager) reconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
-	return m.deployedSubResourceList, nil
+	return m.DeployedSubResourceList, nil
 }
 
 // UninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this Phase CR
 func (m KubedgeBaseManager) uninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	errs := make([]error, 0)
-	for _, toDelete := range m.deployedSubResourceList.Items {
+	for _, toDelete := range m.DeployedSubResourceList.Items {
 		err := m.KubeClient.Delete(context.TODO(), &toDelete)
 		if err != nil {
 			log.Error(err, "Can't not Delete Resource")
@@ -146,5 +159,5 @@ func (m KubedgeBaseManager) uninstallResource(ctx context.Context) (*av1.SubReso
 			return nil, errs[0]
 		}
 	}
-	return m.deployedSubResourceList, nil
+	return m.DeployedSubResourceList, nil
 }
