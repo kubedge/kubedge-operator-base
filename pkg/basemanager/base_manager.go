@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type phasemanager struct {
+type KubedgeBaseManager struct {
 	kubeClient     client.Client
 	renderer       *OwnerRefRenderer
 	phaseName      string
@@ -38,25 +38,25 @@ type phasemanager struct {
 }
 
 // ResourceName returns the name of the release.
-func (m phasemanager) ResourceName() string {
+func (m KubedgeBaseManager) ResourceName() string {
 	return m.phaseName
 }
 
-func (m phasemanager) IsInstalled() bool {
+func (m KubedgeBaseManager) IsInstalled() bool {
 	return m.isInstalled
 }
 
-func (m phasemanager) IsUpdateRequired() bool {
+func (m KubedgeBaseManager) IsUpdateRequired() bool {
 	return m.isUpdateRequired
 }
 
 // Render a chart or just a file
-func (m phasemanager) render(ctx context.Context) (*av1.SubResourceList, error) {
+func (m KubedgeBaseManager) render(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.renderer.RenderFile(m.phaseName, m.phaseNamespace, m.source.Location)
 }
 
 // Attempts to compare the K8s object present with the rendered objects
-func (m phasemanager) sync(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
+func (m KubedgeBaseManager) sync(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
 	deployed := av1.NewSubResourceList(m.phaseNamespace, m.phaseName)
 
 	rendered, err := m.render(ctx)
@@ -89,7 +89,7 @@ func (m phasemanager) sync(ctx context.Context) (*av1.SubResourceList, *av1.SubR
 }
 
 // InstallResource creates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
-func (m phasemanager) installResource(ctx context.Context) (*av1.SubResourceList, error) {
+func (m KubedgeBaseManager) installResource(ctx context.Context) (*av1.SubResourceList, error) {
 
 	rendered, err := m.render(ctx)
 	if err != nil {
@@ -119,17 +119,17 @@ func (m phasemanager) installResource(ctx context.Context) (*av1.SubResourceList
 }
 
 // InstallResource updates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
-func (m phasemanager) updateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
+func (m KubedgeBaseManager) updateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
 	return m.deployedSubResourceList, &av1.SubResourceList{}, nil
 }
 
 // ReconcileResource creates or patches resources as necessary to match this Phase CR
-func (m phasemanager) reconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
+func (m KubedgeBaseManager) reconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.deployedSubResourceList, nil
 }
 
 // UninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this Phase CR
-func (m phasemanager) uninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
+func (m KubedgeBaseManager) uninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	errs := make([]error, 0)
 	for _, toDelete := range m.deployedSubResourceList.Items {
 		err := m.kubeClient.Delete(context.TODO(), &toDelete)
