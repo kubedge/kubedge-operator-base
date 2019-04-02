@@ -11,12 +11,24 @@ import (
 
 // MMESimSpec defines the desired state of MMESim
 type MMESimSpec struct {
-	PhaseSpec `json:",inline"`
+	KubedgeSpec `json:",inline"`
+
+	// LCs describes the set of LC deployed in the simulator
+	LCs *KubedgeSetSpec `json:"lcs,omitempty"`
+
+	// GPBs describes the set of GPB deployed in the simulator
+	GPBs *KubedgeSetSpec `json:"gpbs,omitempty"`
+
+	// NCBs describes the set of NCB deployed in the simulator
+	NCBs *KubedgeSetSpec `json:"ncbs,omitempty"`
+
+	// FSBs describes the set of FSB deployed in the simulator
+	FSBs *KubedgeSetSpec `json:"fsbs,omitempty"`
 }
 
 // MMESimStatus defines the observed state of MMESim
 type MMESimStatus struct {
-	PhaseStatus `json:",inline"`
+	KubedgeStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

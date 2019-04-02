@@ -1,4 +1,4 @@
-// Copyright 2019 The OpenstackLcm Authors
+// Copyright 2019 The Kubedge Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	// "encoding/json"
 	yaml "gopkg.in/yaml.v2"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -166,17 +167,9 @@ type KubedgeStatus struct {
 	// Reason indicates the reason for any related failures.
 	Reason string `json:"reason,omitempty"`
 	// Actual state of the Kubedge Custom Resources
-	ActualState KubedgeResourceState `json:"actual_state"`
+	ActualState KubedgeResourceState `json:"actualState"`
 	// List of conditions and states related to the resource.
 	Conditions []KubedgeCondition `json:"conditions,omitempty"`
-}
-
-// PhaseStatus represents the common attributes shared amongst armada resources
-type PhaseStatus struct {
-	KubedgeStatus `json:",inline"`
-
-	// OpenstackVersion is the version of the backup openstack server.
-	ActualOpenstackServiceVersion string `json:"actualOpenstackServiceVersion,omitempty"`
 }
 
 // SetCondition sets a condition on the status object. If the condition already
@@ -330,34 +323,28 @@ func (s *KubedgeStatus) ComputeActualState(cond KubedgeCondition, target Kubedge
 	}
 }
 
-// PhaseSource describe the location of the CR to create during a Phase of an
-// Openstack Service Life Cycle.
-type PhaseSource struct {
-	// (optional) authentication method
-	AuthMethod string `json:"authMethod,omitempty"`
+// KubedgeSource describe the location of the CR
+type KubedgeSource struct {
 	// ``url`` or ``path`` to the chart's parent directory
 	Location string `json:"location"`
-	// (optional) http proxy server
-	ProxyServer string `json:"proxyServer,omitempty"`
-	// (optional) branch, commit, or reference in the repo (``master`` if not specified)
-	Reference string `json:"reference,omitempty"`
-	// (optional) relative path to target chart from parent (``.`` if not specified)
-	Subpath string `json:"subpath"`
 	// source to build the chart: ``git``, ``local``, or ``tar``
 	Type string `json:"type"`
 }
 
-// PhaseSpec defines the desired state of Phase
-type PhaseSpec struct {
-	// provide a path to a ``git repo``, ``local dir``, or ``tarball url`` chart
-	Source *PhaseSource `json:"source"`
-	// Openstack Service Name
-	OpenstackServiceName string `json:"openstackServiceName"`
-	// Openstack Service EndPoint
-	OpenstackServiceEndPoint string `json:"openstackServiceEndPoint,omitempty"`
+// A KubedgeSetSpec is the specification of a KubedgeSet.
+type KubedgeSetSpec struct {
+	// number of replicas
+	Replicas *int32 `json:"replicas,omitempty"`
+	// selector
+	Selector *metav1.LabelSelector `json:"selector"`
+	// pod template
+	Template v1.PodTemplateSpec `json:"template"`
+}
 
-	// OpenstackServiceVersion is the version of the openstack service.
-	TargetOpenstackServiceVersion string `json:"targetOpenstackServiceVersion,omitempty"`
+// KubedgeSpec defines the desired state of Phase
+type KubedgeSpec struct {
+	// provide a path to a ``git repo``, ``local dir``, or ``tarball url`` chart
+	Source *KubedgeSource `json:"source"`
 	// Target state of the Kubedge Custom Resources
 	TargetState KubedgeResourceState `json:"targetState"`
 }
@@ -440,49 +427,6 @@ func (obj *SubResourceList) GetDependentResources() []unstructured.Unstructured 
 // Returns a new SubResourceList
 func NewSubResourceList(namespace string, name string) *SubResourceList {
 	res := &SubResourceList{Namespace: namespace, Name: name}
-	res.Items = make([]unstructured.Unstructured, 0)
-	return res
-}
-
-// PhaseList represent the list of Phase for that Service
-type PhaseList struct {
-	Name      string
-	Namespace string
-	Notes     string
-	Version   int32
-
-	// Items is the list of Resources deployed in the K8s cluster
-	Items [](unstructured.Unstructured) `json:"items"`
-}
-
-// Returns the Name for the PhaseList
-func (obj *PhaseList) GetName() string {
-	return obj.Name
-}
-
-// Returns the Namespace for this PhaseList
-func (obj *PhaseList) GetNamespace() string {
-	return obj.Namespace
-}
-
-// Returns the Notes for this PhaseList
-func (obj *PhaseList) GetNotes() string {
-	return obj.Notes
-}
-
-// Returns the Version for this PhaseList
-func (obj *PhaseList) GetVersion() int32 {
-	return obj.Version
-}
-
-// Returns the DependentResource for this PhaseList
-func (obj *PhaseList) GetDependentResources() []unstructured.Unstructured {
-	return obj.Items
-}
-
-// Returns a new PhaseList
-func NewPhaseList(namespace string, name string) *PhaseList {
-	res := &PhaseList{Namespace: namespace, Name: name}
 	res.Items = make([]unstructured.Unstructured, 0)
 	return res
 }

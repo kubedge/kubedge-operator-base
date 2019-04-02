@@ -11,12 +11,15 @@ import (
 
 // ArpscanSpec defines the desired state of Arpscan
 type ArpscanSpec struct {
-	PhaseSpec `json:",inline"`
+	KubedgeSpec `json:",inline"`
+
+	// Scanners describes the set of arp scanners deployed in the kubedge cluster
+	Scanners *KubedgeSetSpec `json:"scanners,omitempty"`
 }
 
 // ArpscanStatus defines the observed state of Arpscan
 type ArpscanStatus struct {
-	PhaseStatus `json:",inline"`
+	KubedgeStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -11,12 +11,27 @@ import (
 
 // ECDSClusterSpec defines the desired state of ECDSCluster
 type ECDSClusterSpec struct {
-	PhaseSpec `json:",inline"`
+	KubedgeSpec `json:",inline"`
+
+	// Platforms describes the set of Platform execution context deployed in the cluster
+	Platforms *KubedgeSetSpec `json:"platforms,omitempty"`
+
+	// FrontEnds describes the set of FrontEnd execution context deployed in the cluster
+	FrontEnds *KubedgeSetSpec `json:"frontEnds,omitempty"`
+
+	// Enrichments describes the set of Enrichment execution context deployed in the cluster
+	Enrichments *KubedgeSetSpec `json:"enrichments,omitempty"`
+
+	// BusinessLogics describes the set of BusinessLogic execution context deployed in the cluster
+	BusinessLogics *KubedgeSetSpec `json:"businessLogics,omitempty"`
+
+	// LoadBalancers describes the set of LoadBalancer deployed in the cluster
+	LoadBalancers *KubedgeSetSpec `json:"loadbalancers,omitempty"`
 }
 
 // ECDSClusterStatus defines the observed state of ECDSCluster
 type ECDSClusterStatus struct {
-	PhaseStatus `json:",inline"`
+	KubedgeStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
