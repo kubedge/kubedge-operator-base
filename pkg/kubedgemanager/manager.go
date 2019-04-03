@@ -43,7 +43,7 @@ type KubedgeBaseManager struct {
 	Renderer       *OwnerRefRenderer
 	PhaseName      string
 	PhaseNamespace string
-	Source         *av1.PhaseSource
+	Source         *av1.KubedgeSource
 
 	IsInstalledFlag         bool
 	IsUpdateRequiredFlag    bool
