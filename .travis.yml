@@ -8,6 +8,11 @@ go:
 service:
   - docker
 
+env:
+  - GO111MODULE=on
+
+install: true
+
 jobs:
   include:
     - stage: build docker image
