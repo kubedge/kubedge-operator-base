@@ -29,7 +29,12 @@ import (
 
 var ()
 
-type OwnerRefRenderer struct {
+// KubedgeResourceRenderer
+type KubedgeResourceRenderer interface {
+	RenderFile(name string, namespace string, fileName string) (*av1.SubResourceList, error)
+}
+
+type KubedgeBaseRenderer struct {
 	refs         []metav1.OwnerReference
 	suffix       string
 	renderFiles  []string
@@ -37,7 +42,7 @@ type OwnerRefRenderer struct {
 }
 
 // Adds the ownerrefs to all the documents in a YAML file
-func (o *OwnerRefRenderer) RenderFile(name string, namespace string, fileName string) (*av1.SubResourceList, error) {
+func (o *KubedgeBaseRenderer) RenderFile(name string, namespace string, fileName string) (*av1.SubResourceList, error) {
 
 	yamlfmt, ferr := ioutil.ReadFile(fileName)
 	if ferr != nil {
@@ -68,7 +73,7 @@ func sortManifests(in map[string]string) []string {
 }
 
 // Reads a yaml file and converts into an Unstructured object
-func (o *OwnerRefRenderer) fromYaml(name string, namespace string, filecontent string) (*av1.SubResourceList, error) {
+func (o *KubedgeBaseRenderer) fromYaml(name string, namespace string, filecontent string) (*av1.SubResourceList, error) {
 
 	ownedRenderedFiles := av1.NewSubResourceList(namespace, name)
 
@@ -119,10 +124,10 @@ func (o *OwnerRefRenderer) fromYaml(name string, namespace string, filecontent s
 	return ownedRenderedFiles, nil
 }
 
-// NewOwnerRefRenderer creates a new OwnerRef engine with a set of metav1.OwnerReferences to be added to assets
-func NewOwnerRefRenderer(refs []metav1.OwnerReference, suffix string,
-	renderFiles []string, renderValues map[string]interface{}) *OwnerRefRenderer {
-	return &OwnerRefRenderer{
+// NewKubedgeBaseRenderer creates a new OwnerRef engine with a set of metav1.OwnerReferences to be added to assets
+func NewKubedgeBaseRenderer(refs []metav1.OwnerReference, suffix string,
+	renderFiles []string, renderValues map[string]interface{}) KubedgeResourceRenderer {
+	return &KubedgeBaseRenderer{
 		refs:         refs,
 		suffix:       suffix,
 		renderFiles:  renderFiles,

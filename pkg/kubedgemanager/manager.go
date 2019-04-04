@@ -30,6 +30,7 @@ type KubedgeResourceManager interface {
 	ResourceName() string
 	IsInstalled() bool
 	IsUpdateRequired() bool
+	Render(ctx context.Context) (*av1.SubResourceList, error)
 	Sync(context.Context) error
 	InstallResource(context.Context) (*av1.SubResourceList, error)
 	UpdateResource(context.Context) (*av1.SubResourceList, *av1.SubResourceList, error)
@@ -40,7 +41,7 @@ type KubedgeResourceManager interface {
 // Default implementation of KubedgeResourceManager
 type KubedgeBaseManager struct {
 	KubeClient     client.Client
-	Renderer       *OwnerRefRenderer
+	Renderer       KubedgeResourceRenderer
 	PhaseName      string
 	PhaseNamespace string
 	Source         *av1.KubedgeSource
@@ -64,7 +65,7 @@ func (m KubedgeBaseManager) IsUpdateRequired() bool {
 }
 
 // Render a chart or just a file
-func (m KubedgeBaseManager) BaseRender(ctx context.Context) (*av1.SubResourceList, error) {
+func (m KubedgeBaseManager) Render(ctx context.Context) (*av1.SubResourceList, error) {
 	return m.Renderer.RenderFile(m.PhaseName, m.PhaseNamespace, m.Source.Location)
 }
 
@@ -72,7 +73,7 @@ func (m KubedgeBaseManager) BaseRender(ctx context.Context) (*av1.SubResourceLis
 func (m KubedgeBaseManager) BaseSync(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
 	deployed := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
 
-	rendered, err := m.BaseRender(ctx)
+	rendered, err := m.Render(ctx)
 	if err != nil {
 		return nil, deployed, err
 	}
@@ -104,7 +105,7 @@ func (m KubedgeBaseManager) BaseSync(ctx context.Context) (*av1.SubResourceList,
 // InstallResource creates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
 func (m KubedgeBaseManager) BaseInstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 
-	rendered, err := m.BaseRender(ctx)
+	rendered, err := m.Render(ctx)
 	if err != nil {
 		return m.DeployedSubResourceList, err
 	}
