@@ -35,10 +35,10 @@ type KubedgeResourceRenderer interface {
 }
 
 type KubedgeBaseRenderer struct {
-	refs         []metav1.OwnerReference
-	suffix       string
-	renderFiles  []string
-	renderValues map[string]interface{}
+	Refs         []metav1.OwnerReference
+	Suffix       string
+	RenderFiles  []string
+	RenderValues map[string]interface{}
 }
 
 // Adds the ownerrefs to all the documents in a YAML file
@@ -49,7 +49,7 @@ func (o *KubedgeBaseRenderer) RenderFile(name string, namespace string, fileName
 		log.Error(ferr, "Can not read file")
 		return av1.NewSubResourceList(namespace, name), ferr
 	}
-	ownedRenderedFiles, err := o.fromYaml(name, namespace, string(yamlfmt))
+	ownedRenderedFiles, err := o.FromYaml(name, namespace, string(yamlfmt))
 	if err != nil {
 		log.Info("Can not convert malformed yaml to unstructured", "filename", fileName)
 		return ownedRenderedFiles, err
@@ -58,7 +58,7 @@ func (o *KubedgeBaseRenderer) RenderFile(name string, namespace string, fileName
 	return ownedRenderedFiles, nil
 }
 
-func sortManifests(in map[string]string) []string {
+func SortManifests(in map[string]string) []string {
 	var keys []string
 	for k := range in {
 		keys = append(keys, k)
@@ -73,12 +73,12 @@ func sortManifests(in map[string]string) []string {
 }
 
 // Reads a yaml file and converts into an Unstructured object
-func (o *KubedgeBaseRenderer) fromYaml(name string, namespace string, filecontent string) (*av1.SubResourceList, error) {
+func (o *KubedgeBaseRenderer) FromYaml(name string, namespace string, filecontent string) (*av1.SubResourceList, error) {
 
 	ownedRenderedFiles := av1.NewSubResourceList(namespace, name)
 
 	manifests := releaseutil.SplitManifests(filecontent)
-	for _, manifest := range sortManifests(manifests) {
+	for _, manifest := range SortManifests(manifests) {
 		manifestMap := chartutil.FromYaml(manifest)
 
 		if _, ok := manifestMap["Error"]; ok {
@@ -98,11 +98,11 @@ func (o *KubedgeBaseRenderer) fromYaml(name string, namespace string, fileconten
 		}
 
 		u := &unstructured.Unstructured{Object: unst}
-		u.SetOwnerReferences(o.refs)
+		u.SetOwnerReferences(o.Refs)
 
 		// Init name and namespace
 		if u.GetName() == "" {
-			u.SetName(name + "-" + o.suffix)
+			u.SetName(name + "-" + o.Suffix)
 		}
 
 		if u.GetNamespace() == "" {
@@ -110,7 +110,7 @@ func (o *KubedgeBaseRenderer) fromYaml(name string, namespace string, fileconten
 		}
 
 		// Add OwnerReferences
-		u.SetOwnerReferences(o.refs)
+		u.SetOwnerReferences(o.Refs)
 
 		// Add labels
 		// labels := map[string]string{
@@ -128,9 +128,9 @@ func (o *KubedgeBaseRenderer) fromYaml(name string, namespace string, fileconten
 func NewKubedgeBaseRenderer(refs []metav1.OwnerReference, suffix string,
 	renderFiles []string, renderValues map[string]interface{}) KubedgeResourceRenderer {
 	return &KubedgeBaseRenderer{
-		refs:         refs,
-		suffix:       suffix,
-		renderFiles:  renderFiles,
-		renderValues: renderValues,
+		Refs:         refs,
+		Suffix:       suffix,
+		RenderFiles:  renderFiles,
+		RenderValues: renderValues,
 	}
 }
