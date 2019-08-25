@@ -5,14 +5,9 @@ go 1.13
 require (
 	cloud.google.com/go v0.37.2 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
-	github.com/PuerkitoBio/purell v1.1.1 // indirect
-	github.com/coreos/prometheus-operator v0.26.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
-	github.com/emicklei/go-restful v2.9.3+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/zapr v0.1.1 // indirect
-	github.com/go-openapi/spec v0.19.0 // indirect
-	github.com/go-openapi/swag v0.19.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
@@ -22,10 +17,8 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/json-iterator/go v1.1.6 // indirect
-	github.com/mailru/easyjson v0.0.0-20190312143242-1de009706dbe // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
-	github.com/operator-framework/operator-sdk v0.0.0-20190329183732-e2aec8e8af79
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/procfs v0.0.0-20190328153300-af7bedc223fb // indirect
 	github.com/spf13/pflag v1.0.3 // indirect
