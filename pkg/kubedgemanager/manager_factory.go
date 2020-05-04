@@ -26,6 +26,7 @@ type KubedgeResourceManagerFactory interface {
 	NewArpscanManager(r *av1.Arpscan) KubedgeResourceManager
 	NewECDSClusterManager(r *av1.ECDSCluster) KubedgeResourceManager
 	NewMMESimManager(r *av1.MMESim) KubedgeResourceManager
+	NewEMBBSliceManager(r *av1.EMBBSlice) KubedgeResourceManager
 }
 
 type managerFactory struct {
@@ -64,5 +65,10 @@ func (f managerFactory) NewECDSClusterManager(r *av1.ECDSCluster) KubedgeResourc
 
 // NewMMESimManager returns a new manager capable of controlling MMESim phase of the service lifecyle
 func (f managerFactory) NewMMESimManager(r *av1.MMESim) KubedgeResourceManager {
+	return nil
+}
+
+// NewEMBBSliceManager returns a new manager capable of controlling EMBBSlice phase of the service lifecyle
+func (f managerFactory) NewEMBBSliceManager(r *av1.EMBBSlice) KubedgeResourceManager {
 	return nil
 }

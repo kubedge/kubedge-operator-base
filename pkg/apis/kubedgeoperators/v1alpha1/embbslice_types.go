@@ -9,46 +9,39 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// MMESimSpec defines the desired state of MMESim
-type MMESimSpec struct {
+// EMBBSliceSpec defines the desired state of EMBBSlice
+type EMBBSliceSpec struct {
 	KubedgeSpec `json:",inline"`
 
-	// LCs describes the set of LC deployed in the simulator
-	LCs *KubedgeSetSpec `json:"lcs,omitempty"`
+	// UPFs describes the set of UPF deployed in the simulator
+	UPFs *KubedgeSetSpec `json:"upfs,omitempty"`
 
-	// GPBs describes the set of GPB deployed in the simulator
-	GPBs *KubedgeSetSpec `json:"gpbs,omitempty"`
-
-	// NCBs describes the set of NCB deployed in the simulator
-	NCBs *KubedgeSetSpec `json:"ncbs,omitempty"`
-
-	// FSBs describes the set of FSB deployed in the simulator
-	FSBs *KubedgeSetSpec `json:"fsbs,omitempty"`
+	SMFs *KubedgeSetSpec `json:"smfs,omitempty"`
 }
 
-// MMESimStatus defines the observed state of MMESim
-type MMESimStatus struct {
+// EMBBSliceStatus defines the observed state of EMBBSlice
+type EMBBSliceStatus struct {
 	KubedgeStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// MMESim is the Schema for the openstackdeployments API
+// EMBBSlice is the Schema for the openstackdeployments API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=mmesims,shortName=mme
+// +kubebuilder:resource:path=embbslices,shortName=embb
 // +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
-type MMESim struct {
+type EMBBSlice struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MMESimSpec   `json:"spec,omitempty"`
-	Status MMESimStatus `json:"status,omitempty"`
+	Spec   EMBBSliceSpec   `json:"spec,omitempty"`
+	Status EMBBSliceStatus `json:"status,omitempty"`
 }
 
-// Init is used to initialize an MMESim. Namely, if the state has not been
+// Init is used to initialize an EMBBSlice. Namely, if the state has not been
 // specified, it will be set
-func (obj *MMESim) Init() {
+func (obj *EMBBSlice) Init() {
 	if obj.Status.ActualState == "" {
 		obj.Status.ActualState = StateUninitialied
 	}
@@ -59,17 +52,17 @@ func (obj *MMESim) Init() {
 }
 
 // Return the list of dependent resources to watch
-func (obj *MMESim) GetDependentResources() []unstructured.Unstructured {
+func (obj *EMBBSlice) GetDependentResources() []unstructured.Unstructured {
 	var res = make([]unstructured.Unstructured, 0)
 	return res
 }
 
-// Convert an unstructured.Unstructured into a typed MMESim
-func ToMMESim(u *unstructured.Unstructured) *MMESim {
-	var obj *MMESim
+// Convert an unstructured.Unstructured into a typed EMBBSlice
+func ToEMBBSlice(u *unstructured.Unstructured) *EMBBSlice {
+	var obj *EMBBSlice
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &MMESim{
+		return &EMBBSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      u.GetName(),
 				Namespace: u.GetNamespace(),
@@ -79,9 +72,9 @@ func ToMMESim(u *unstructured.Unstructured) *MMESim {
 	return obj
 }
 
-// Convert a typed MMESim into an unstructured.Unstructured
-func (obj *MMESim) FromMMESim() *unstructured.Unstructured {
-	u := NewMMESimVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
+// Convert a typed EMBBSlice into an unstructured.Unstructured
+func (obj *EMBBSlice) FromEMBBSlice() *unstructured.Unstructured {
+	u := NewEMBBSliceVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -91,24 +84,24 @@ func (obj *MMESim) FromMMESim() *unstructured.Unstructured {
 }
 
 // IsDeleted returns true if the chart group has been deleted
-func (obj *MMESim) IsDeleted() bool {
+func (obj *EMBBSlice) IsDeleted() bool {
 	return obj.GetDeletionTimestamp() != nil
 }
 
 // IsSatisfied returns true if the chart's actual state meets its target state
-func (obj *MMESim) IsSatisfied() bool {
+func (obj *EMBBSlice) IsSatisfied() bool {
 	return obj.Spec.TargetState == obj.Status.ActualState
 }
 
-func (obj *MMESim) GetName() string {
+func (obj *EMBBSlice) GetName() string {
 	return obj.ObjectMeta.Name
 }
 
-// Returns a GKV for MMESim
-func NewMMESimVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for EMBBSlice
+func NewEMBBSliceVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
 	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
-	u.SetKind("MMESim")
+	u.SetKind("EMBBSlice")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
@@ -116,26 +109,26 @@ func NewMMESimVersionKind(namespace string, name string) *unstructured.Unstructu
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// MMESimList contains a list of MMESim
-type MMESimList struct {
+// EMBBSliceList contains a list of EMBBSlice
+type EMBBSliceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MMESim `json:"items"`
+	Items           []EMBBSlice `json:"items"`
 }
 
-// Convert an unstructured.Unstructured into a typed MMESimList
-func ToMMESimList(u *unstructured.Unstructured) *MMESimList {
-	var obj *MMESimList
+// Convert an unstructured.Unstructured into a typed EMBBSliceList
+func ToEMBBSliceList(u *unstructured.Unstructured) *EMBBSliceList {
+	var obj *EMBBSliceList
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &obj)
 	if err != nil {
-		return &MMESimList{}
+		return &EMBBSliceList{}
 	}
 	return obj
 }
 
-// Convert a typed MMESimList into an unstructured.Unstructured
-func (obj *MMESimList) FromMMESimList() *unstructured.Unstructured {
-	u := NewMMESimListVersionKind("", "")
+// Convert a typed EMBBSliceList into an unstructured.Unstructured
+func (obj *EMBBSliceList) FromEMBBSliceList() *unstructured.Unstructured {
+	u := NewEMBBSliceListVersionKind("", "")
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -145,23 +138,23 @@ func (obj *MMESimList) FromMMESimList() *unstructured.Unstructured {
 }
 
 // JEB: Not sure yet if we really will need it
-func (obj *MMESimList) Equivalent(other *MMESimList) bool {
+func (obj *EMBBSliceList) Equivalent(other *EMBBSliceList) bool {
 	if other == nil {
 		return false
 	}
 	return reflect.DeepEqual(obj.Items, other.Items)
 }
 
-// Returns a GKV for MMESimList
-func NewMMESimListVersionKind(namespace string, name string) *unstructured.Unstructured {
+// Returns a GKV for EMBBSliceList
+func NewEMBBSliceListVersionKind(namespace string, name string) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
 	u.SetAPIVersion("kubedgeoperators.kubedge.cloud/v1alpha1")
-	u.SetKind("MMESimList")
+	u.SetKind("EMBBSliceList")
 	u.SetNamespace(namespace)
 	u.SetName(name)
 	return u
 }
 
 func init() {
-	SchemeBuilder.Register(&MMESim{}, &MMESimList{})
+	SchemeBuilder.Register(&EMBBSlice{}, &EMBBSliceList{})
 }

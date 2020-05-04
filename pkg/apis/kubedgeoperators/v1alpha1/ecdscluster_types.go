@@ -39,7 +39,7 @@ type ECDSClusterStatus struct {
 // ECDSCluster is the Schema for the openstackdeployments API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=ecdsclusters,shortName=osupg
+// +kubebuilder:resource:path=ecdsclusters,shortName=ecds
 // +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
 type ECDSCluster struct {
 	metav1.TypeMeta   `json:",inline"`

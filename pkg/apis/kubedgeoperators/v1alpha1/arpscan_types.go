@@ -27,7 +27,7 @@ type ArpscanStatus struct {
 // Arpscan is the Schema for the openstackdeployments API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=arpscans,shortName=ostest
+// +kubebuilder:resource:path=arpscans,shortName=arp
 // +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
 type Arpscan struct {
 	metav1.TypeMeta   `json:",inline"`
