@@ -28,7 +28,7 @@ type ArpscanStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=arpscans,shortName=arp
-// +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
+// +kubebuilder:printcolumn:name="Satisfied",type="boolean",JSONPath=".status.satisfied",description="Satisfied"
 type Arpscan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -46,7 +46,7 @@ func (obj *Arpscan) Init() {
 	if obj.Spec.TargetState == "" {
 		obj.Spec.TargetState = StateUninitialized
 	}
-	obj.Status.Succeeded = (obj.Spec.TargetState == obj.Status.ActualState)
+	obj.Status.Satisfied = (obj.Spec.TargetState == obj.Status.ActualState)
 }
 
 // Return the list of dependent resources to watch

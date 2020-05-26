@@ -7,9 +7,9 @@ metadata:
   name: ecdsclusters.kubedgeoperators.kubedge.cloud
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.succeeded
-    description: Succeeded
-    name: Succeeded
+  - JSONPath: .status.satisfied
+    description: Satisfied
+    name: Satisfied
     type: boolean
   group: kubedgeoperators.kubedge.cloud
   names:
@@ -29976,7 +29976,7 @@ spec:
               description: Reason indicates the reason for any related failures.
               type: string
             satisfied:
-              description: Succeeded indicates if the release's ActualState satisfies
+              description: Satisfied indicates if the release's ActualState satisfies
                 its target state
               type: boolean
           required:

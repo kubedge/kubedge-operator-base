@@ -40,7 +40,7 @@ type ECDSClusterStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=ecdsclusters,shortName=ecds
-// +kubebuilder:printcolumn:name="Succeeded",type="boolean",JSONPath=".status.succeeded",description="Succeeded"
+// +kubebuilder:printcolumn:name="Satisfied",type="boolean",JSONPath=".status.satisfied",description="Satisfied"
 type ECDSCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -58,7 +58,7 @@ func (obj *ECDSCluster) Init() {
 	if obj.Spec.TargetState == "" {
 		obj.Spec.TargetState = StateUninitialized
 	}
-	obj.Status.Succeeded = (obj.Spec.TargetState == obj.Status.ActualState)
+	obj.Status.Satisfied = (obj.Spec.TargetState == obj.Status.ActualState)
 }
 
 // Return the list of dependent resources to watch

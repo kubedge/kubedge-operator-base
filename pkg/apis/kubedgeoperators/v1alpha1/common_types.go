@@ -124,12 +124,12 @@ type KubedgeConditionListHelper struct {
 
 // KubedgeStatus represents the common attributes shared amongst armada resources
 type KubedgeStatus struct {
-	// Succeeded indicates if the release's ActualState satisfies its target state
-	Succeeded bool `json:"satisfied"`
+	// Satisfied indicates if the release's ActualState satisfies its target state
+	Satisfied bool `json:"satisfied"`
 	// Reason indicates the reason for any related failures.
 	Reason string `json:"reason,omitempty"`
 	// Actual state of the Kubedge Custom Resources
-	ActualState KubedgeResourceState `json:"actual_state"`
+	ActualState KubedgeResourceState `json:"actualState"`
 	// List of conditions and states related to the resource. JEB: Feature kind of overlap with event recorder
 	Conditions []KubedgeCondition `json:"conditions,omitempty"`
 }
@@ -244,52 +244,52 @@ func (s *KubedgeStatus) ComputeActualState(cond KubedgeCondition, target Kubedge
 	if cond.Status == ConditionStatusTrue {
 		if cond.Type == ConditionPending {
 			s.ActualState = StatePending
-			s.Succeeded = (s.ActualState == target)
+			s.Satisfied = (s.ActualState == target)
 			s.Reason = ""
 		} else if cond.Type == ConditionInitialized {
 			// Since that condition is set almost systematically
 			// let's do not recompute the state.
 			if (s.ActualState == "") || (s.ActualState == StateUnknown) {
 				s.ActualState = StateInitialized
-				s.Succeeded = (s.ActualState == target)
+				s.Satisfied = (s.ActualState == target)
 				s.Reason = ""
 			}
 		} else if cond.Type == ConditionRunning {
 			// The deployment is still running
 			s.ActualState = StateRunning
-			s.Succeeded = false
+			s.Satisfied = false
 			s.Reason = ""
 		} else if cond.Type == ConditionDeployed {
 			// No change is expected anymore. It is deployed
 			s.ActualState = StateDeployed
-			s.Succeeded = (s.ActualState == target)
+			s.Satisfied = (s.ActualState == target)
 			s.Reason = ""
 		} else if cond.Type == ConditionFailed {
 			// No change is expected anymore. It is failed
 			s.ActualState = StateFailed
-			s.Succeeded = false
+			s.Satisfied = false
 			s.Reason = cond.Reason.String()
 		} else if cond.Type == ConditionIrreconcilable {
 			// We can't reconcile the subresources and the CRD
 			s.ActualState = StateError
-			s.Succeeded = false
+			s.Satisfied = false
 			s.Reason = cond.Reason.String()
 		} else if cond.Type == ConditionError {
 			// We have a bug somewhere.
 			s.ActualState = StateError
-			s.Succeeded = false
+			s.Satisfied = false
 			s.Reason = cond.Reason.String()
 		} else {
-			s.Succeeded = (s.ActualState == target)
+			s.Satisfied = (s.ActualState == target)
 			s.Reason = ""
 		}
 	} else {
 		if cond.Type == ConditionDeployed {
 			s.ActualState = StateUninstalled
-			s.Succeeded = (s.ActualState == target)
+			s.Satisfied = (s.ActualState == target)
 			s.Reason = ""
 		} else {
-			s.Succeeded = (s.ActualState == target)
+			s.Satisfied = (s.ActualState == target)
 			s.Reason = ""
 		}
 	}
