@@ -6,6 +6,13 @@ DHUBREPO         ?= kubedge1/${COMPONENT}-dev
 DOCKER_NAMESPACE ?= kubedge1
 IMG_V1           ?= ${DHUBREPO}:v${VERSION_V1}
 
+BINDIR           := bin
+TOOLS_DIR        := tools
+TOOLS_BIN_DIR    := $(TOOLS_DIR)/bin
+
+# Binaries.
+CONTROLLER_GEN   := $(TOOLS_BIN_DIR)/controller-gen
+
 all: docker-build
 
 setup:
@@ -20,6 +27,21 @@ clean:
 	rm -fr build/_output
 	rm -fr config/crds
 
+
+## --------------------------------------
+## Tooling Binaries
+## --------------------------------------
+
+$(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
+
+.PHONY: install-tools
+install-tools: $(CONTROLLER_GEN)
+
+## --------------------------------------
+## Testing
+## --------------------------------------
+
 # Run tests
 unittest: setup fmt vet-v1
 	echo "sudo systemctl stop kubelet"
@@ -29,6 +51,10 @@ unittest: setup fmt vet-v1
 	cp chart/templates/*v1alpha1* config/crds/
 	go test ./pkg/... ./cmd/... -coverprofile cover.out
 
+## --------------------------------------
+## Linting
+## --------------------------------------
+
 # Run go fmt against code
 fmt: setup
 	go fmt ./pkg/... ./cmd/...
@@ -37,10 +63,28 @@ fmt: setup
 vet-v1: fmt
 	go vet -composites=false -tags=v1 ./pkg/... ./cmd/...
 
-# Generate code
-generate: setup
-	GO111MODULE=on controller-gen crd paths=./pkg/apis/kubedgeoperators/... crd:trivialVersions=true output:crd:dir=./chart/templates/ output:none
-	GO111MODULE=on controller-gen object paths=./pkg/apis/kubedgeoperators/... output:object:dir=./pkg/apis/kubedgeoperators/v1alpha1 output:none
+## --------------------------------------
+## Generate
+## --------------------------------------
+
+.PHONY: modules
+modules: ## Runs go mod to ensure proper vendoring.
+	go mod tidy
+	cd $(TOOLS_DIR); go mod tidy
+
+.PHONY: generate
+generate: ## Generate code
+	$(MAKE) generate-go
+	$(MAKE) generate-manifests
+
+.PHONY: generate-go
+generate-go: $(CONTROLLER_GEN)
+	GO111MODULE=on $(CONTROLLER_GEN) object paths=./pkg/apis/kubedgeoperators/... output:object:dir=./pkg/apis/kubedgeoperators/v1alpha1 output:none
+
+.PHONY: generate-manifests
+generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
+	mkdir -p chart/templates/
+	GO111MODULE=on $(CONTROLLER_GEN) crd paths=./pkg/apis/kubedgeoperators/... crd:trivialVersions=true output:crd:dir=./chart/templates/ output:none
 
 # Build the docker image
 docker-build: fmt docker-build-v1

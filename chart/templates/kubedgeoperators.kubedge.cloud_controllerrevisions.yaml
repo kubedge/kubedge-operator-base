@@ -3,6 +3,8 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
   name: controllerrevisions.kubedgeoperators.kubedge.cloud
 spec:
@@ -12,7 +14,7 @@ spec:
     listKind: ControllerRevisionList
     plural: controllerrevisions
     singular: controllerrevision
-  scope: ""
+  scope: Namespaced
   validation:
     openAPIV3Schema:
       description: ControllerRevision implements an immutable snapshot of state data.

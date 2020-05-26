@@ -37,6 +37,8 @@ type MMESimStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=mmesims,shortName=mme
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.actualState",description="State"
+// +kubebuilder:printcolumn:name="Target State",type="string",JSONPath=".spec.targetState",description="Target State"
 // +kubebuilder:printcolumn:name="Satisfied",type="boolean",JSONPath=".status.satisfied",description="Satisfied"
 type MMESim struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -90,14 +92,29 @@ func (obj *MMESim) FromMMESim() *unstructured.Unstructured {
 	return u
 }
 
-// IsDeleted returns true if the chart group has been deleted
+// IsDeleted returns true if the simulator has been deleted
 func (obj *MMESim) IsDeleted() bool {
 	return obj.GetDeletionTimestamp() != nil
 }
 
-// IsSatisfied returns true if the chart's actual state meets its target state
+// IsTargetStateUnitialized returns true if the simulator is not managed by the reconcilier
+func (obj *MMESim) IsTargetStateUninitialized() bool {
+	return obj.Spec.TargetState == StateUninitialized
+}
+
+// IsSatisfied returns true if the simulator's actual state meets its target state
 func (obj *MMESim) IsSatisfied() bool {
 	return obj.Spec.TargetState == obj.Status.ActualState
+}
+
+// IsReady returns true if the simulator's actual state is deployed
+func (obj *MMESim) IsReady() bool {
+	return obj.Status.ActualState == StateDeployed
+}
+
+// IsFailedOrError returns true if the simulator's actual state is failed or error
+func (obj *MMESim) IsFailedOrError() bool {
+	return obj.Status.ActualState == StateFailed || obj.Status.ActualState == StateError
 }
 
 func (obj *MMESim) GetName() string {
