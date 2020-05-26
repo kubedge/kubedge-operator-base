@@ -16,6 +16,7 @@ package basemanager
 
 import (
 	"context"
+	"fmt"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,6 +24,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	yaml "sigs.k8s.io/yaml"
 )
 
 // KubedgeResourceManager
@@ -114,7 +116,9 @@ func (m KubedgeBaseManager) BaseInstallResource(ctx context.Context) (*av1.SubRe
 	for _, toCreate := range rendered.Items {
 		err := m.KubeClient.Create(context.TODO(), &toCreate)
 		if err != nil {
-			log.Error(err, "Can't not Create Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName())
+			blob, _ := yaml.Marshal(toCreate)
+			thestr := fmt.Sprintf("[%s]", string(blob))
+			log.Error(err, "Can't not Create Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName(), "resource", thestr)
 			errs = append(errs, err)
 		} else {
 			log.Info("Created Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName())
