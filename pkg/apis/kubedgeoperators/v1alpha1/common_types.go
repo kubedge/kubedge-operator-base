@@ -15,6 +15,8 @@
 package v1alpha1
 
 import (
+	"reflect"
+
 	yaml "gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -367,7 +369,7 @@ type SubResourceList struct {
 	Version   int32
 
 	// Items is the list of Resources deployed in the K8s cluster
-	Items [](unstructured.Unstructured) `json:"items"`
+	Items [](unstructured.Unstructured)
 }
 
 // Returns the Name for the SubResourceList
@@ -393,6 +395,56 @@ func (obj *SubResourceList) GetVersion() int32 {
 // Returns the DependentResource for this SubResourceList
 func (obj *SubResourceList) GetDependentResources() []unstructured.Unstructured {
 	return obj.Items
+}
+
+// JEB: Not sure yet if we really will need it
+func (obj *SubResourceList) Equivalent(other *SubResourceList) bool {
+	if other == nil {
+		return false
+	}
+	return reflect.DeepEqual(obj.Items, other.Items)
+}
+
+// Let's check the reference are setup properly.
+func (obj *SubResourceList) CheckOwnerReference(refs []metav1.OwnerReference) bool {
+
+	// Check that each sub resource is owned by the phase
+	for _, item := range obj.Items {
+		if !reflect.DeepEqual(item.GetOwnerReferences(), refs) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Check the state of a service
+func (obj *SubResourceList) IsReady() bool {
+
+	dep := &KubernetesDependency{}
+
+	// Check that each sub resource is owned by the phase
+	for _, item := range obj.Items {
+		if !dep.IsUnstructuredReady(&item) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (obj *SubResourceList) IsFailedOrError() bool {
+
+	dep := &KubernetesDependency{}
+
+	// Check that each sub resource is owned by the phase
+	for _, item := range obj.Items {
+		if dep.IsUnstructuredFailedOrError(&item) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Returns a new SubResourceList

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package basemanager
+package v1alpha1
 
 import (
 	"fmt"
@@ -59,17 +59,17 @@ func (obj *KubernetesDependency) IsUnstructuredReady(u *unstructured.Unstructure
 		{
 			return obj.IsWorkflowReady(u)
 		}
-	case "ArmadaChart":
+	case "EMBBSlice":
 		{
-			return obj.IsArmadaChartReady(u)
+			return obj.IsEMBBSliceReady(u)
 		}
-	case "ArmadaChartGroup":
+	case "MMESim":
 		{
-			return obj.IsArmadaChartGroupReady(u)
+			return obj.IsMMESimReady(u)
 		}
-	case "ArmadaManifest":
+	case "ECDSCluster":
 		{
-			return obj.IsArmadaManifestReady(u)
+			return obj.IsECDSClusterReady(u)
 		}
 	// case "PodDisruptionBudget":
 	// case "ServiceAccount":
@@ -118,17 +118,17 @@ func (obj *KubernetesDependency) IsUnstructuredFailedOrError(u *unstructured.Uns
 		{
 			return obj.IsWorkflowFailedOrError(u)
 		}
-	case "ArmadaChart":
+	case "EMBBSlice":
 		{
-			return obj.IsArmadaChartFailedOrError(u)
+			return obj.IsEMBBSliceFailedOrError(u)
 		}
-	case "ArmadaChartGroup":
+	case "MMESim":
 		{
-			return obj.IsArmadaChartGroupFailedOrError(u)
+			return obj.IsMMESimFailedOrError(u)
 		}
-	case "ArmadaManifest":
+	case "ECDSCluster":
 		{
-			return obj.IsArmadaManifestFailedOrError(u)
+			return obj.IsECDSClusterFailedOrError(u)
 		}
 	// case "PodDisruptionBudget":
 	// case "ServiceAccount":
@@ -181,17 +181,17 @@ func (obj *KubernetesDependency) UnstructuredStatusChanged(u *unstructured.Unstr
 		{
 			return obj.WorkflowStatusChanged(u, v)
 		}
-	case "ArmadaChart":
+	case "EMBBSlice":
 		{
-			return obj.ArmadaChartStatusChanged(u, v)
+			return obj.EMBBSliceStatusChanged(u, v)
 		}
-	case "ArmadaChartGroup":
+	case "MMESim":
 		{
-			return obj.ArmadaChartGroupStatusChanged(u, v)
+			return obj.MMESimStatusChanged(u, v)
 		}
-	case "ArmadaManifest":
+	case "ECDSCluster":
 		{
-			return obj.ArmadaManifestStatusChanged(u, v)
+			return obj.ECDSClusterStatusChanged(u, v)
 		}
 	// case "PodDisruptionBudget":
 	// case "ServiceAccount":
@@ -208,45 +208,45 @@ func (obj *KubernetesDependency) UnstructuredStatusChanged(u *unstructured.Unstr
 	}
 }
 
-// Check the state of the ArmadaChart to figure out if it is still running
-func (obj *KubernetesDependency) IsArmadaChartReady(u *unstructured.Unstructured) bool {
+// Check the state of the EMBBSlice to figure out if it is still running
+func (obj *KubernetesDependency) IsEMBBSliceReady(u *unstructured.Unstructured) bool {
 	return obj.IsCustomResourceReady("status.actual_state", []string{"Deployed"}, u)
 }
 
-// Check the state of the ArmadaChart to figure out if it is still running
-func (obj *KubernetesDependency) IsArmadaChartFailedOrError(u *unstructured.Unstructured) bool {
+// Check the state of the EMBBSlice to figure out if it is still running
+func (obj *KubernetesDependency) IsEMBBSliceFailedOrError(u *unstructured.Unstructured) bool {
 	return obj.IsCustomResourceReady("status.actual_state", []string{"Error", "Failed"}, u)
 }
 
-func (obj *KubernetesDependency) ArmadaChartStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
+func (obj *KubernetesDependency) EMBBSliceStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
 	return obj.CustomResourceStatusChanged("status.actual_state", u, v)
 }
 
-// Check the state of the ArmadaChartGroup to figure out if it is still running
-func (obj *KubernetesDependency) IsArmadaChartGroupReady(u *unstructured.Unstructured) bool {
+// Check the state of the MMESim to figure out if it is still running
+func (obj *KubernetesDependency) IsMMESimReady(u *unstructured.Unstructured) bool {
 	return obj.IsCustomResourceReady("status.actual_state", []string{"Deployed"}, u)
 }
 
-// Check the state of the ArmadaChartGroup to figure out if it failed
-func (obj *KubernetesDependency) IsArmadaChartGroupFailedOrError(u *unstructured.Unstructured) bool {
+// Check the state of the MMESim to figure out if it failed
+func (obj *KubernetesDependency) IsMMESimFailedOrError(u *unstructured.Unstructured) bool {
 	return obj.IsCustomResourceReady("status.actual_state", []string{"Error", "Failed"}, u)
 }
 
-func (obj *KubernetesDependency) ArmadaChartGroupStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
+func (obj *KubernetesDependency) MMESimStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
 	return obj.CustomResourceStatusChanged("status.actual_state", u, v)
 }
 
-// Check the state of the ArmadaManifest to figure out if it is still running
-func (obj *KubernetesDependency) IsArmadaManifestReady(u *unstructured.Unstructured) bool {
+// Check the state of the ECDSCluster to figure out if it is still running
+func (obj *KubernetesDependency) IsECDSClusterReady(u *unstructured.Unstructured) bool {
 	return obj.IsCustomResourceReady("status.actual_state", []string{"Deployed"}, u)
 }
 
-// Check the state of the ArmadaManifest to figure out if it failed
-func (obj *KubernetesDependency) IsArmadaManifestFailedOrError(u *unstructured.Unstructured) bool {
+// Check the state of the ECDSCluster to figure out if it failed
+func (obj *KubernetesDependency) IsECDSClusterFailedOrError(u *unstructured.Unstructured) bool {
 	return obj.IsCustomResourceReady("status.actual_state", []string{"Error", "Failed"}, u)
 }
 
-func (obj *KubernetesDependency) ArmadaManifestStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
+func (obj *KubernetesDependency) ECDSClusterStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
 	return obj.CustomResourceStatusChanged("status.actual_state", u, v)
 }
 

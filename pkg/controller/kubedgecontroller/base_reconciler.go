@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"time"
 
+	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 	mgr "github.com/kubedge/kubedge-operator-base/pkg/kubedgemanager"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -86,7 +87,7 @@ func (r *KubedgeBaseReconciler) BuildDependentPredicate() *crtpredicate.Funcs {
 			}
 
 			// Filter on Status change
-			dep := &mgr.KubernetesDependency{}
+			dep := &av1.KubernetesDependency{}
 			changed, oldv, newv := dep.UnstructuredStatusChanged(u, v)
 			if changed {
 				log.Info("UpdateEvent. Status changed", "resource", u.GetName(), "namespace", u.GetNamespace(),
