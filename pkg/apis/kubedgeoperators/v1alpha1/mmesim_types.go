@@ -50,10 +50,10 @@ type MMESim struct {
 // specified, it will be set
 func (obj *MMESim) Init() {
 	if obj.Status.ActualState == "" {
-		obj.Status.ActualState = StateUninitialied
+		obj.Status.ActualState = StateUninitialized
 	}
 	if obj.Spec.TargetState == "" {
-		obj.Spec.TargetState = StateUninitialied
+		obj.Spec.TargetState = StateUninitialized
 	}
 	obj.Status.Succeeded = (obj.Spec.TargetState == obj.Status.ActualState)
 }

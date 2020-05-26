@@ -15,27 +15,12 @@
 package v1alpha1
 
 import (
-	// "encoding/json"
 	yaml "gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
-
-// Administractive state of the reconcilation of a CRD by the corresponding controller
-type KubedgeAdminState string
-
-// Describe the Administrative State of the Chart
-const (
-	// StateUnknown indicates that a release/chart/chartgroup/manifest automatic reconcilation by the controller is enabled
-	StateEnabled KubedgeAdminState = "enabled"
-	// StateUnknown indicates that a release/chart/chartgroup/manifest automatic reconcilation by the controller is disabled
-	StateDisabled KubedgeAdminState = "disabled"
-)
-
-// String converts a KubedgeAdminState to a printable string
-func (x KubedgeAdminState) String() string { return string(x) }
 
 // KubedgeResourceState is the status of a release/chart/chartgroup/manifest
 type KubedgeResourceState string
@@ -62,35 +47,23 @@ func (x KubedgeConditionReason) String() string { return string(x) }
 // Describe the status of a release
 const (
 	// StateUninitialied indicates that a release/chart/chartgroup/manifest exists, but has not been acted upon
-	StateUninitialied KubedgeResourceState = "uninitialized"
+	StateUninitialized KubedgeResourceState = "uninitialized"
 	// StateUnknown indicates that a release/chart/chartgroup/manifest is in an uncertain state.
 	StateUnknown KubedgeResourceState = "unknown"
 	// StateInitialized indicates that a release/chart/chartgroup/manifest is in an Kubernetes
 	StateInitialized KubedgeResourceState = "initialized"
-	// StateDeployed indicates that the release/chart/chartgroup/manifest has been downloaded from artifact repository
-	StateDownloaded KubedgeResourceState = "downloaded"
 	// StateDeployed indicates that the release/chart/chartgroup/manifest has been pushed to Kubernetes.
 	StateDeployed KubedgeResourceState = "deployed"
 	// StateUninstalled indicates that a release/chart/chartgroup/manifest has been uninstalled from Kubermetes.
 	StateUninstalled KubedgeResourceState = "uninstalled"
-	// StateSuperseded indicates that this release/chart/chartgroup/manifest object is outdated and a newer one exists.
-	StateSuperseded KubedgeResourceState = "superseded"
 	// StateFailed indicates that the release/chart/chartgroup/manifest was not successfully deployed.
 	StateFailed KubedgeResourceState = "failed"
-	// StateUninstalling indicates that a uninstall operation is underway.
-	StateUninstalling KubedgeResourceState = "uninstalling"
-	// StatePendingInstall indicates that an install operation is underway.
-	StatePendingInstall KubedgeResourceState = "pending-install"
-	// StatePendingUpgrade indicates that an upgrade operation is underway.
-	StatePendingUpgrade KubedgeResourceState = "pending-upgrade"
-	// StatePendingRollback indicates that an rollback operation is underway.
-	StatePendingRollback KubedgeResourceState = "pending-rollback"
-	// StatePendingBackup indicates that an data backup operation is underway.
-	StatePendingBackup KubedgeResourceState = "pending-backup"
-	// StatePendingRestore indicates that an data restore operation is underway.
-	StatePendingRestore KubedgeResourceState = "pending-restore"
-	// StatePendingInitialization indicates that an data initialization operation is underway.
-	StatePendingInitialization KubedgeResourceState = "pending-initialization"
+	// StatePending indicates that resource was xxx
+	StatePending KubedgeResourceState = "pending"
+	// StateRunning indicates that resource was xxx
+	StateRunning KubedgeResourceState = "running"
+	// StateError indicates that resource was xxx
+	StateError KubedgeResourceState = "error"
 )
 
 // These represent acceptable values for a KubedgeConditionStatus
@@ -103,45 +76,32 @@ const (
 // These represent acceptable values for a KubedgeConditionType
 const (
 	ConditionIrreconcilable KubedgeConditionType = "Irreconcilable"
-	ConditionFailed                              = "Failed"
+	ConditionPending                             = "Pending"
 	ConditionInitialized                         = "Initializing"
-	ConditionEnabled                             = "Enabled"
-	ConditionDownloaded                          = "Downloaded"
+	ConditionError                               = "Error"
+	ConditionRunning                             = "Running"
 	ConditionDeployed                            = "Deployed"
-
-	// JEB: Not sure we will ever be able to use those conditions
-	ConditionBackedUp   KubedgeConditionType = "BackedUp"
-	ConditionRestored                        = "Restored"
-	ConditionUpgraded                        = "Upgraded"
-	ConditionRolledBack                      = "RolledBack"
+	ConditionFailed                              = "Failed"
 )
 
 // The following represent the more fine-grained reasons for a given condition
 const (
 	// Successful Conditions Reasons
-	ReasonInstallSuccessful   KubedgeConditionReason = "InstallSuccessful"
-	ReasonDownloadSuccessful                         = "DownloadSuccessful"
-	ReasonReconcileSuccessful                        = "ReconcileSuccessful"
-	ReasonUninstallSuccessful                        = "UninstallSuccessful"
-	ReasonUpdateSuccessful                           = "UpdateSuccessful"
-	ReasonBackupSuccessful                           = "BackupSuccessful"
-	ReasonRestoreSuccessful                          = "RestoreSuccessful"
-	ReasonUpgradeSuccessful                          = "UpgradeSuccessful"
-	ReasonRollbackSuccessful                         = "RollbackSuccessful"
+	ReasonInstallSuccessful        KubedgeConditionReason = "InstallSuccessful"
+	ReasonReconcileSuccessful                             = "ReconcileSuccessful"
+	ReasonUninstallSuccessful                             = "UninstallSuccessful"
+	ReasonUpdateSuccessful                                = "UpdateSuccessful"
+	ReasonUnderlyingResourcesReady                        = "UnderlyingResourcesReady"
+	ReasonUnderlyingResourcesError                        = "UnderlyingResourcesError"
 
 	// Error Condition Reasons
 	ReasonInstallError   KubedgeConditionReason = "InstallError"
-	ReasonDownloadError                         = "DownloadError"
 	ReasonReconcileError                        = "ReconcileError"
 	ReasonUninstallError                        = "UninstallError"
 	ReasonUpdateError                           = "UpdateError"
-	ReasonBackupError                           = "BackupError"
-	ReasonRestoreError                          = "RestoreError"
-	ReasonUpgradeError                          = "UpgradeError"
-	ReasonRollbackError                         = "RollbackError"
 )
 
-// KubedgeCondition represents one current condition of an Lcm resource
+// KubedgeCondition represents one current condition of an Kubedge resource
 // A condition might not show up if it is not happening.
 // For example, if a chart is not deploying, the Deploying condition would not show up.
 // If a chart is deploying and encountered a problem that prevents the deployment,
@@ -167,8 +127,8 @@ type KubedgeStatus struct {
 	// Reason indicates the reason for any related failures.
 	Reason string `json:"reason,omitempty"`
 	// Actual state of the Kubedge Custom Resources
-	ActualState KubedgeResourceState `json:"actualState"`
-	// List of conditions and states related to the resource.
+	ActualState KubedgeResourceState `json:"actual_state"`
+	// List of conditions and states related to the resource. JEB: Feature kind of overlap with event recorder
 	Conditions []KubedgeCondition `json:"conditions,omitempty"`
 }
 
@@ -261,7 +221,6 @@ func (s *KubedgeConditionListHelper) InitIfEmpty() []KubedgeCondition {
 
 // Utility function to print an KubedgeCondition list
 func (s *KubedgeConditionListHelper) PrettyPrint() string {
-	// res, _ := json.MarshalIndent(s.Items, "", "\t")
 	res, _ := yaml.Marshal(s.Items)
 	return string(res)
 }
@@ -281,7 +240,11 @@ func (s *KubedgeConditionListHelper) FindCondition(conditionType KubedgeConditio
 func (s *KubedgeStatus) ComputeActualState(cond KubedgeCondition, target KubedgeResourceState) {
 	// TODO(Ian): finish this
 	if cond.Status == ConditionStatusTrue {
-		if cond.Type == ConditionInitialized {
+		if cond.Type == ConditionPending {
+			s.ActualState = StatePending
+			s.Succeeded = (s.ActualState == target)
+			s.Reason = ""
+		} else if cond.Type == ConditionInitialized {
 			// Since that condition is set almost systematically
 			// let's do not recompute the state.
 			if (s.ActualState == "") || (s.ActualState == StateUnknown) {
@@ -289,18 +252,29 @@ func (s *KubedgeStatus) ComputeActualState(cond KubedgeCondition, target Kubedge
 				s.Succeeded = (s.ActualState == target)
 				s.Reason = ""
 			}
+		} else if cond.Type == ConditionRunning {
+			// The deployment is still running
+			s.ActualState = StateRunning
+			s.Succeeded = false
+			s.Reason = ""
 		} else if cond.Type == ConditionDeployed {
+			// No change is expected anymore. It is deployed
 			s.ActualState = StateDeployed
 			s.Succeeded = (s.ActualState == target)
 			s.Reason = ""
-		} else if cond.Type == ConditionEnabled {
-			if (s.ActualState == "") || (s.ActualState == StateUnknown) {
-				s.ActualState = StatePendingInitialization
-				s.Succeeded = (s.ActualState == target)
-				s.Reason = ""
-			}
-		} else if cond.Type == ConditionIrreconcilable {
+		} else if cond.Type == ConditionFailed {
+			// No change is expected anymore. It is failed
 			s.ActualState = StateFailed
+			s.Succeeded = false
+			s.Reason = cond.Reason.String()
+		} else if cond.Type == ConditionIrreconcilable {
+			// We can't reconcile the subresources and the CRD
+			s.ActualState = StateError
+			s.Succeeded = false
+			s.Reason = cond.Reason.String()
+		} else if cond.Type == ConditionError {
+			// We have a bug somewhere.
+			s.ActualState = StateError
 			s.Succeeded = false
 			s.Reason = cond.Reason.String()
 		} else {
@@ -312,10 +286,6 @@ func (s *KubedgeStatus) ComputeActualState(cond KubedgeCondition, target Kubedge
 			s.ActualState = StateUninstalled
 			s.Succeeded = (s.ActualState == target)
 			s.Reason = ""
-		} else if cond.Type == ConditionEnabled {
-			s.ActualState = StateUnknown
-			s.Succeeded = true
-			s.Reason = "Disabled Resource is always successful"
 		} else {
 			s.Succeeded = (s.ActualState == target)
 			s.Reason = ""
@@ -368,6 +338,7 @@ type ControllerRevision struct {
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Data is the serialized representation of the state.
+	// +k8s:openapi-gen:schema-type-format=object
 	Data runtime.RawExtension `json:"data,omitempty" protobuf:"bytes,2,opt,name=data"`
 
 	// Revision indicates the revision of the state represented by Data.

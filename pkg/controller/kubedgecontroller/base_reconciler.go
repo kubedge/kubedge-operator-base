@@ -15,15 +15,18 @@
 package kubedgecontroller
 
 import (
+	"reflect"
 	"time"
 
 	mgr "github.com/kubedge/kubedge-operator-base/pkg/kubedgemanager"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"k8s.io/client-go/tools/record"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	crtpredicate "sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 // KubedgeBaseReconciler reconciles custom resources as Workflow, Jobs....
@@ -43,4 +46,75 @@ func (r *KubedgeBaseReconciler) Contains(slice []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// buildDependentPredicate create the predicates used by subresources watches
+func (r *KubedgeBaseReconciler) BuildDependentPredicate() *crtpredicate.Funcs {
+
+	dependentPredicate := crtpredicate.Funcs{
+		// We don't need to reconcile dependent resource creation events
+		// because dependent resources are only ever created during
+		// reconciliation. Another reconcile would be redundant.
+		CreateFunc: func(e event.CreateEvent) bool {
+			// o := e.Object.(*unstructured.Unstructured)
+			// log.Info("CreateEvent. Filtering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			//	"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
+			return false
+		},
+
+		// Reconcile when a dependent resource is deleted so that it can be
+		// recreated.
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			// o := e.Object.(*unstructured.Unstructured)
+			// log.Info("DeleteEvent. Triggering", "resource", o.GetName(), "namespace", o.GetNamespace(),
+			//	"apiVersion", o.GroupVersionKind().GroupVersion(), "kind", o.GroupVersionKind().Kind)
+			return true
+		},
+
+		// Reconcile when a dependent resource is updated, so that it can
+		// be patched back to the resource managed by the Argo workflow, if
+		// necessary. Ignore updates that only change the status and
+		// resourceVersion.
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			u := e.ObjectOld.(*unstructured.Unstructured)
+			v := e.ObjectNew.(*unstructured.Unstructured)
+
+			// TODO(jeb): Note sure if we really want to do that
+			// Filter on Kind Change
+			if u.GetKind() == "ConfigMap" || u.GetKind() == "Secret" {
+				return false
+			}
+
+			// Filter on Status change
+			dep := &mgr.KubernetesDependency{}
+			changed, oldv, newv := dep.UnstructuredStatusChanged(u, v)
+			if changed {
+				log.Info("UpdateEvent. Status changed", "resource", u.GetName(), "namespace", u.GetNamespace(),
+					"apiVersion", u.GroupVersionKind().GroupVersion(), "kind", u.GroupVersionKind().Kind,
+					"old", oldv, "new", newv)
+				return true
+			}
+
+			// Filter on Spec change
+			old := u.DeepCopy()
+			new := v.DeepCopy()
+
+			delete(old.Object, "status")
+			delete(new.Object, "status")
+			old.SetResourceVersion("")
+			new.SetResourceVersion("")
+
+			if reflect.DeepEqual(old.Object, new.Object) {
+				// log.Info("UpdateEvent. Spec unchanged", "resource", new.GetName(), "namespace", new.GetNamespace(),
+				//	"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
+				return false
+			} else {
+				log.Info("UpdateEvent. Spec changed", "resource", new.GetName(), "namespace", new.GetNamespace(),
+					"apiVersion", new.GroupVersionKind().GroupVersion(), "kind", new.GroupVersionKind().Kind)
+				return true
+			}
+		},
+	}
+
+	return &dependentPredicate
 }
