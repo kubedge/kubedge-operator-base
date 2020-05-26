@@ -15,16 +15,17 @@
 package basemanager
 
 import (
+	"fmt"
 	"io/ioutil"
+	"regexp"
 	"sort"
-
-	"k8s.io/helm/pkg/chartutil"
-	"k8s.io/helm/pkg/releaseutil"
+	"strings"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	yaml "sigs.k8s.io/yaml"
 )
 
 var ()
@@ -72,14 +73,50 @@ func SortManifests(in map[string]string) []string {
 	return manifests
 }
 
+var sep = regexp.MustCompile("(?:^|\\s*\n)---\\s*")
+
+// SplitManifests takes a string of manifest and returns a map contains individual manifests
+func (o *KubedgeBaseRenderer) SplitManifests(bigFile string) map[string]string {
+	// Basically, we're quickly splitting a stream of YAML documents into an
+	// array of YAML docs. In the current implementation, the file name is just
+	// a place holder, and doesn't have any further meaning.
+	tpl := "manifest-%d"
+	res := map[string]string{}
+	// Making sure that any extra whitespace in YAML stream doesn't interfere in splitting documents correctly.
+	bigFileTmp := strings.TrimSpace(bigFile)
+	docs := sep.Split(bigFileTmp, -1)
+	var count int
+	for _, d := range docs {
+
+		if d == "" {
+			continue
+		}
+
+		d = strings.TrimSpace(d)
+		res[fmt.Sprintf(tpl, count)] = d
+		count = count + 1
+	}
+	return res
+}
+
+// FromYaml converts a YAML document into a map[string]interface{}.
+func (o *KubedgeBaseRenderer) Unmarshal(str string) map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if err := yaml.Unmarshal([]byte(str), &m); err != nil {
+		m["Error"] = err.Error()
+	}
+	return m
+}
+
 // Reads a yaml file and converts into an Unstructured object
 func (o *KubedgeBaseRenderer) FromYaml(name string, namespace string, filecontent string) (*av1.SubResourceList, error) {
 
 	ownedRenderedFiles := av1.NewSubResourceList(namespace, name)
 
-	manifests := releaseutil.SplitManifests(filecontent)
+	manifests := o.SplitManifests(filecontent)
 	for _, manifest := range SortManifests(manifests) {
-		manifestMap := chartutil.FromYaml(manifest)
+		manifestMap := o.Unmarshal(manifest)
 
 		if _, ok := manifestMap["Error"]; ok {
 			log.Error(nil, "error parsing rendered template to add ownerrefs")

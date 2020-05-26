@@ -17,11 +17,11 @@ package v1alpha1
 import (
 	"reflect"
 
-	yaml "gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	yaml "sigs.k8s.io/yaml"
 )
 
 // KubedgeResourceState is the status of a release/chart/chartgroup/manifest
