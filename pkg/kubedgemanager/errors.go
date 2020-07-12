@@ -21,4 +21,23 @@ import (
 var (
 	// ErrNotFound indicates the resource was not found.
 	ErrNotFound = errors.New("Resource not found")
+
+	// ErrOwnershipMismatch indicates that one of the subresources does
+	// not have the right ownership.
+	ErrOwnershipMismatch = errors.New("Ownership Mismatch")
+
+	// ErrSync detected during SyncResource
+	ErrSync = errors.New("Sync Error")
+
+	// ErrInstall detected during InstallResource
+	ErrInstall = errors.New("Install Error")
+
+	// ErrUninstall detected during UninstallResource
+	ErrUninstall = errors.New("Uninstall Error")
+
+	// ErrUpdate detected during UpdateResource
+	ErrUpdate = errors.New("Update Error")
+
+	// ErrReconcile detected during ReconcileResource
+	ErrReconcile = errors.New("Reconcile Error")
 )

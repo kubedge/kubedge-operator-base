@@ -29,9 +29,10 @@ import (
 	crtpredicate "sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
+// DependentResourceWatchUpdater does xxx
 type DependentResourceWatchUpdater func([]unstructured.Unstructured) error
 
-// BuildDependentResourcesWatchUpdater builds a function that adds watches for resources in released Helm charts.
+// BuildDependentResourceWatchUpdater builds a function that adds watches for resources in released Helm charts.
 func BuildDependentResourceWatchUpdater(mgr manager.Manager, owner *unstructured.Unstructured,
 	c controller.Controller, dependentPredicate crtpredicate.Funcs) DependentResourceWatchUpdater {
 
@@ -75,9 +76,8 @@ func BuildDependentResourceWatchUpdater(mgr manager.Manager, owner *unstructured
 			if err != nil {
 				wlog.Error(err, "Add Watch to Controller")
 				return err
-			} else {
-				wlog.Info("Added watch")
 			}
+			wlog.Info("Added watch")
 
 			m.Lock()
 			watches[gvk] = struct{}{}

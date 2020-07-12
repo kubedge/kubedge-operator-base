@@ -19,15 +19,16 @@ import (
 	"fmt"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
-	"k8s.io/apimachinery/pkg/types"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	yaml "sigs.k8s.io/yaml"
 )
 
-// KubedgeResourceManager
+// KubedgeResourceManager provides the interface for base manaager.
 type KubedgeResourceManager interface {
 	ResourceName() string
 	IsInstalled() bool
@@ -40,10 +41,11 @@ type KubedgeResourceManager interface {
 	UninstallResource(context.Context) (*av1.SubResourceList, error)
 }
 
-// Default implementation of KubedgeResourceManager
+// KubedgeBaseManager provides the default implementation.
 type KubedgeBaseManager struct {
 	KubeClient     client.Client
 	Renderer       KubedgeResourceRenderer
+	OwnerRefs      []metav1.OwnerReference
 	PhaseName      string
 	PhaseNamespace string
 	Source         *av1.KubedgeSource
@@ -58,10 +60,12 @@ func (m KubedgeBaseManager) ResourceName() string {
 	return m.PhaseName
 }
 
+// IsInstalled indicates with the resources have been installed.
 func (m KubedgeBaseManager) IsInstalled() bool {
 	return m.IsInstalledFlag
 }
 
+// IsUpdateRequired indicates with the resources have been installed.
 func (m KubedgeBaseManager) IsUpdateRequired() bool {
 	return m.IsUpdateRequiredFlag
 }
@@ -71,8 +75,29 @@ func (m KubedgeBaseManager) Render(ctx context.Context) (*av1.SubResourceList, e
 	return m.Renderer.RenderFile(m.PhaseName, m.PhaseNamespace, m.Source.Location)
 }
 
-// Attempts to compare the K8s object present with the rendered objects
-func (m KubedgeBaseManager) BaseSync(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
+// BaseSync retrieves from K8s the sub resources (Workflow, Job, ....) attached to this Oslc CR
+func (m *KubedgeBaseManager) BaseSync(ctx context.Context) error {
+	m.DeployedSubResourceList = av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
+
+	rendered, alreadyDeployed, err := m.internalSync(ctx)
+	if err != nil {
+		return err
+	}
+
+	m.DeployedSubResourceList = alreadyDeployed
+	if len(rendered.GetDependentResources()) != len(alreadyDeployed.GetDependentResources()) {
+		m.IsInstalledFlag = false
+		m.IsUpdateRequiredFlag = false
+	} else {
+		m.IsInstalledFlag = true
+		m.IsUpdateRequiredFlag = false
+	}
+
+	return nil
+}
+
+// internalSync attempts to compare the K8s object present with the rendered objects
+func (m KubedgeBaseManager) internalSync(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
 	deployed := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
 
 	rendered, err := m.Render(ctx)
@@ -81,8 +106,8 @@ func (m KubedgeBaseManager) BaseSync(ctx context.Context) (*av1.SubResourceList,
 	}
 
 	errs := make([]error, 0)
+
 	for _, renderedResource := range rendered.Items {
-		// TODO(jeb): Don't undestand why need to code such a klduge
 		existingResource := unstructured.Unstructured{}
 		existingResource.SetAPIVersion(renderedResource.GetAPIVersion())
 		existingResource.SetKind(renderedResource.GetKind())
@@ -92,77 +117,153 @@ func (m KubedgeBaseManager) BaseSync(ctx context.Context) (*av1.SubResourceList,
 		err := m.KubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
-				// Don't want to trace is the error is not a NotFound.
-				log.Error(err, "Can't not retrieve Resource")
+				log.Error(err, "Can't not retrieve phase")
+				errs = append(errs, err)
 			}
-			errs = append(errs, err)
 		} else {
 			deployed.Items = append(deployed.Items, existingResource)
 		}
 	}
 
+	if !deployed.CheckOwnerReference(m.OwnerRefs) {
+		return rendered, nil, ErrOwnershipMismatch
+	}
+
+	// TODO(jeb): not sure this is right
+	// if len(errs) != 0 {
+	//	return rendered, deployed, errs[0]
+	// }
 	return rendered, deployed, nil
+
 }
 
-// InstallResource creates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
+// BaseInstallResource creates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
 func (m KubedgeBaseManager) BaseInstallResource(ctx context.Context) (*av1.SubResourceList, error) {
+
+	errs := make([]error, 0)
+	created := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
+
+	if m.DeployedSubResourceList == nil {
+		// There was an error during SyncResource
+		return created, ErrInstall
+	}
 
 	rendered, err := m.Render(ctx)
 	if err != nil {
 		return m.DeployedSubResourceList, err
 	}
 
-	errs := make([]error, 0)
 	for _, toCreate := range rendered.Items {
 		err := m.KubeClient.Create(context.TODO(), &toCreate)
 		if err != nil {
-			blob, _ := yaml.Marshal(toCreate)
-			thestr := fmt.Sprintf("[%s]", string(blob))
-			log.Error(err, "Can't not Create Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName(), "resource", thestr)
-			errs = append(errs, err)
+			if !apierrors.IsAlreadyExists(err) {
+				blob, _ := yaml.Marshal(toCreate)
+				thestr := fmt.Sprintf("[%s]", string(blob))
+				log.Error(err, "Can't not Create Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName(), "resource", thestr)
+				errs = append(errs, err)
+			} else {
+				// Should consider as just created by us
+				log.Info("Created Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName())
+				created.Items = append(created.Items, toCreate)
+			}
 		} else {
-			log.Info("Created Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName())
-			m.DeployedSubResourceList.Items = append(m.DeployedSubResourceList.Items, toCreate)
+			created.Items = append(created.Items, toCreate)
 		}
 	}
 
 	if len(errs) != 0 {
-		if apierrors.IsNotFound(errs[0]) {
-			return m.DeployedSubResourceList, ErrNotFound
+		return created, errs[0]
+	}
+	return created, nil
+}
+
+// BaseUpdateResource updates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
+func (m KubedgeBaseManager) BaseUpdateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
+	updated := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
+
+	if m.DeployedSubResourceList == nil {
+		// There was an error during SyncResource
+		return m.DeployedSubResourceList, updated, ErrUpdate
+	}
+
+	// TODO(JEB): Big hack. ReconcileResource should do more
+	m.DeployedSubResourceList.DeepCopyInto(updated)
+
+	return m.DeployedSubResourceList, updated, nil
+}
+
+// BaseReconcileResource creates or patches resources as necessary to match this Phase CR
+func (m KubedgeBaseManager) BaseReconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
+	errs := make([]error, 0)
+	reconciled := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
+
+	if m.DeployedSubResourceList == nil {
+		// There was an error during SyncResource
+		return reconciled, ErrReconcile
+	}
+
+	rendered, err := m.Render(ctx)
+	if err != nil {
+		return m.DeployedSubResourceList, err
+	}
+
+	for _, renderedResource := range rendered.Items {
+		existingResource := unstructured.Unstructured{}
+		existingResource.SetAPIVersion(renderedResource.GetAPIVersion())
+		existingResource.SetKind(renderedResource.GetKind())
+		existingResource.SetName(renderedResource.GetName())
+		existingResource.SetNamespace(renderedResource.GetNamespace())
+
+		err := m.KubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				log.Error(err, "Can't not retrieve resource")
+				errs = append(errs, err)
+			}
 		} else {
-			return m.DeployedSubResourceList, errs[0]
+			// A merge patch will preserve other fields modified at runtime.
+			patch := client.MergeFrom(renderedResource.DeepCopy())
+			err := m.KubeClient.Patch(context.TODO(), &existingResource, patch)
+			if err != nil {
+				if !apierrors.IsNotFound(err) {
+					log.Error(err, "Can't not patch resource")
+					errs = append(errs, err)
+				}
+			} else {
+				reconciled.Items = append(reconciled.Items, existingResource)
+			}
 		}
 	}
-	return m.DeployedSubResourceList, nil
+
+	if len(errs) != 0 {
+		return reconciled, errs[0]
+	}
+	return reconciled, nil
 }
 
-// InstallResource updates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
-func (m KubedgeBaseManager) BaseUpdateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
-	return m.DeployedSubResourceList, &av1.SubResourceList{}, nil
-}
-
-// ReconcileResource creates or patches resources as necessary to match this Phase CR
-func (m KubedgeBaseManager) BaseReconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
-	return m.DeployedSubResourceList, nil
-}
-
-// UninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this Phase CR
+// BaseUninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this Phase CR
 func (m KubedgeBaseManager) BaseUninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	errs := make([]error, 0)
+	notdeleted := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
+
+	if m.DeployedSubResourceList == nil {
+		// There was an error during SyncResource
+		return notdeleted, ErrUninstall
+	}
+
 	for _, toDelete := range m.DeployedSubResourceList.Items {
 		err := m.KubeClient.Delete(context.TODO(), &toDelete)
 		if err != nil {
-			log.Error(err, "Can't not Delete Resource")
-			errs = append(errs, err)
+			if !apierrors.IsNotFound(err) {
+				log.Error(err, "Can't not delete resource")
+				errs = append(errs, err)
+				notdeleted.Items = append(notdeleted.Items, toDelete)
+			}
 		}
 	}
 
 	if len(errs) != 0 {
-		if apierrors.IsNotFound(errs[0]) {
-			return nil, ErrNotFound
-		} else {
-			return nil, errs[0]
-		}
+		return notdeleted, errs[0]
 	}
-	return m.DeployedSubResourceList, nil
+	return notdeleted, nil
 }

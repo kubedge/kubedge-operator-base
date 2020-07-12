@@ -15,6 +15,7 @@
 package basemanager
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"regexp"
@@ -22,9 +23,12 @@ import (
 	"strings"
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
+	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	yaml "sigs.k8s.io/yaml"
 )
 
@@ -159,6 +163,102 @@ func (o *KubedgeBaseRenderer) FromYaml(name string, namespace string, fileconten
 	}
 
 	return ownedRenderedFiles, nil
+}
+
+// MergePodTemplate takes a possibly nil container template and a
+// list of steps, merging each of the steps with the container template, if
+// it's not nil, and returning the resulting list.
+// Deprecated
+func (o *KubedgeBaseRenderer) MergePodTemplateSpec(template *corev1.PodTemplateSpec, k *av1.KubedgeSetSpec) error {
+	if template == nil || k == nil {
+		return nil
+	}
+
+	// We need JSON bytes to generate a patch to merge the step containers
+	// onto the template container, so marshal the template.
+	templateAsJSON, err := json.Marshal(template)
+	if err != nil {
+		return err
+	}
+	// We need to do a three-way merge to actually merge the template and
+	// step containers, so we need an empty container as the "original"
+	emptyAsJSON, err := json.Marshal(&corev1.PodTemplateSpec{})
+	if err != nil {
+		return err
+	}
+
+	// Marshal the step's to JSON
+	stepAsJSON, err := json.Marshal(k.Template)
+	if err != nil {
+		return err
+	}
+
+	// Get the patch meta for Container, which is needed for generating and applying the merge patch.
+	patchSchema, err := strategicpatch.NewPatchMetaFromStruct(template)
+
+	if err != nil {
+		return err
+	}
+
+	// Create a merge patch, with the empty JSON as the original, the step JSON as the modified, and the template
+	// JSON as the current - this lets us do a deep merge of the template and step containers, with awareness of
+	// the "patchMerge" tags.
+	patch, err := strategicpatch.CreateThreeWayMergePatch(emptyAsJSON, stepAsJSON, templateAsJSON, patchSchema, true)
+	if err != nil {
+		return err
+	}
+
+	// Actually apply the merge patch to the template JSON.
+	mergedAsJSON, err := strategicpatch.StrategicMergePatchUsingLookupPatchMeta(templateAsJSON, patch, patchSchema)
+	if err != nil {
+		return err
+	}
+
+	// Unmarshal the merged JSON to a Container pointer, and return it.
+	err = json.Unmarshal(mergedAsJSON, template)
+	if err != nil {
+		return err
+	}
+
+	// If the container's args is nil, reset it to empty instead
+	// if merged.Args == nil && s.Args != nil {
+	//	merged.Args = []string{}
+	// }
+
+	return nil
+}
+
+// Update the Unstructured read in the file using the content of the Spec.
+func (o *KubedgeBaseRenderer) UpdateStatefulSet(u *unstructured.Unstructured, k *av1.KubedgeSetSpec) {
+	if k != nil {
+
+		out := v1.StatefulSet{}
+		err1 := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &out)
+		if err1 != nil {
+			log.Error(err1, "error converting from Unstructured")
+		}
+
+		if k.Replicas != nil {
+			out.Spec.Replicas = k.Replicas
+		}
+
+		if k.Selector != nil {
+			out.Spec.Selector = k.Selector.DeepCopy()
+		}
+
+		// out.Spec.Template = *(k.Template.DeepCopy())
+		err2 := o.MergePodTemplateSpec(&out.Spec.Template, k)
+		if err2 != nil {
+			log.Error(err2, "error merging PodTemplateSpec")
+		}
+
+		unst, err3 := runtime.DefaultUnstructuredConverter.ToUnstructured(&out)
+		if err3 != nil {
+			log.Error(err3, "error converting to Unstructured")
+		}
+
+		u.SetUnstructuredContent(unst)
+	}
 }
 
 // NewKubedgeBaseRenderer creates a new OwnerRef engine with a set of metav1.OwnerReferences to be added to assets

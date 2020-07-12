@@ -21,7 +21,7 @@ import (
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 )
 
-// ManagerFactory creates Managers that are specific to custom resources.
+// KubedgeResourceManagerFactory creates Managers that are specific to custom resources.
 type KubedgeResourceManagerFactory interface {
 	NewArpscanManager(r *av1.Arpscan) KubedgeResourceManager
 	NewECDSClusterManager(r *av1.ECDSCluster) KubedgeResourceManager
