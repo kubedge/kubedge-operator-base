@@ -1,7 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 COMPONENT        ?= kubedge-base-operator
-VERSION_V1       ?= 0.1.18
+VERSION_V1       ?= 0.1.19
 DHUBREPO         ?= kubedge1/${COMPONENT}-dev
 DOCKER_NAMESPACE ?= kubedge1
 IMG_V1           ?= ${DHUBREPO}:v${VERSION_V1}

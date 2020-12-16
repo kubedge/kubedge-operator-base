@@ -1,6 +1,6 @@
 module github.com/keleustes/armada-crd/tools
 
-go 1.13
+go 1.15
 
 require (
 	github.com/golangci/golangci-lint v1.20.0
