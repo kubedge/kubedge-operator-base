@@ -45,7 +45,7 @@ type KubedgeBaseRenderer struct {
 }
 
 // Adds the ownerrefs to all the documents in a YAML file
-func (o *KubedgeBaseRenderer) RenderFile(name string, namespace string, fileName string) (*av1.SubResourceList, error) {
+func (o KubedgeBaseRenderer) RenderFile(name string, namespace string, fileName string) (*av1.SubResourceList, error) {
 
 	yamlfmt, ferr := ioutil.ReadFile(fileName)
 	if ferr != nil {
