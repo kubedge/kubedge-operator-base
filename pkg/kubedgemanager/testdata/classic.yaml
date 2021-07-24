@@ -2,86 +2,86 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fsb
+  name: micro1
   # namespace: mmesim
   labels:
-    app: fsb
+    app: micro1
 spec:
   ports:
   - port: 80
-    name: fsb
+    name: micro1
   clusterIP: None
   selector:
-    app: fsb
+    app: micro1
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: fsb
+  name: micro1
   # namespace: mmesim
 spec:
   selector:
     matchLabels:
-      app: fsb # has to match .spec.template.metadata.labels
-  serviceName: fsb
+      app: micro1 # has to match .spec.template.metadata.labels
+  serviceName: micro1
   replicas: 3 # by default is 1
   template:
     metadata:
       labels:
-        app: fsb # has to match .spec.selector.matchLabels
+        app: micro1 # has to match .spec.selector.matchLabels
     spec:
       terminationGracePeriodSeconds: 10
       containers:
-      - name: fsb
+      - name: micro1
         image: busybox
         command:
         - sleep
         - "3600"
         ports:
         - containerPort: 80
-          name: fsb
+          name: micro1
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: gpb
+  name: micro2
   # namespace: mmesim
   labels:
-    app: gpb
+    app: micro2
 spec:
   ports:
   - port: 80
-    name: gpb
+    name: micro2
   clusterIP: None
   selector:
-    app: gpb
+    app: micro2
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: gpb
+  name: micro2
   # namespace: mmesim
 spec:
   selector:
     matchLabels:
-      app: gpb # has to match .spec.template.metadata.labels
-  serviceName: gpb
+      app: micro2 # has to match .spec.template.metadata.labels
+  serviceName: micro2
   replicas: 3 # by default is 1
   template:
     metadata:
       labels:
-        app: gpb # has to match .spec.selector.matchLabels
+        app: micro2 # has to match .spec.selector.matchLabels
     spec:
       terminationGracePeriodSeconds: 10
       containers:
-      - name: gpb
+      - name: micro2
         image: busybox
         command:
         - sleep
         - "3600"
         ports:
         - containerPort: 80
-          name: gpb
+          name: micro2
 ---
 apiVersion: v1
 kind: Service
@@ -128,41 +128,41 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ncb
+  name: micro3
   # namespace: mmesim
   labels:
-    app: ncb
+    app: micro3
 spec:
   ports:
   - port: 80
-    name: ncb
+    name: micro3
   clusterIP: None
   selector:
-    app: ncb
+    app: micro3
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: ncb
+  name: micro3
   # namespace: mmesim
 spec:
   selector:
     matchLabels:
-      app: ncb # has to match .spec.template.metadata.labels
-  serviceName: ncb
+      app: micro3 # has to match .spec.template.metadata.labels
+  serviceName: micro3
   replicas: 3 # by default is 1
   template:
     metadata:
       labels:
-        app: ncb # has to match .spec.selector.matchLabels
+        app: micro3 # has to match .spec.selector.matchLabels
     spec:
       terminationGracePeriodSeconds: 10
       containers:
-      - name: ncb
+      - name: micro3
         image: busybox
         command:
         - sleep
         - "3600"
         ports:
         - containerPort: 80
-          name: ncb
+          name: micro3
