@@ -167,8 +167,8 @@ func (o *KubedgeBaseRenderer) FromYaml(name string, namespace string, fileconten
 // list of steps, merging each of the steps with the container template, if
 // it's not nil, and returning the resulting list.
 // Deprecated
-func (o *KubedgeBaseRenderer) MergePodTemplateSpec(template *corev1.PodTemplateSpec, k *av1.KubedgeSetSpec) error {
-	if template == nil || k == nil {
+func (o *KubedgeBaseRenderer) MergePodTemplateSpec(template *corev1.PodTemplateSpec, k corev1.PodTemplateSpec) error {
+	if template == nil {
 		return nil
 	}
 
@@ -186,7 +186,7 @@ func (o *KubedgeBaseRenderer) MergePodTemplateSpec(template *corev1.PodTemplateS
 	}
 
 	// Marshal the step's to JSON
-	stepAsJSON, err := json.Marshal(k.Template)
+	stepAsJSON, err := json.Marshal(k)
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func (o *KubedgeBaseRenderer) UpdateStatefulSet(u *unstructured.Unstructured, k 
 		}
 
 		// out.Spec.Template = *(k.Template.DeepCopy())
-		err2 := o.MergePodTemplateSpec(&out.Spec.Template, k)
+		err2 := o.MergePodTemplateSpec(&out.Spec.Template, k.Template)
 		if err2 != nil {
 			log.Error(err2, "error merging PodTemplateSpec")
 		}

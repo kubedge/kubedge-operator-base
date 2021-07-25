@@ -17,7 +17,7 @@ package v1alpha1
 import (
 	"reflect"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -405,12 +405,36 @@ func (obj *SubResourceList) Equivalent(other *SubResourceList) bool {
 	return reflect.DeepEqual(obj.Items, other.Items)
 }
 
+// GetControllerRef returns a pointer to the controllerRef if controllee has a controller
+func (obj *SubResourceList) GetControllerRef(refs []metav1.OwnerReference) *metav1.OwnerReference {
+	for i := range refs {
+		if refs[i].Controller != nil && *refs[i].Controller {
+			return &refs[i]
+		}
+	}
+	return nil
+}
+
 // Let's check the reference are setup properly.
 func (obj *SubResourceList) CheckOwnerReference(refs []metav1.OwnerReference) bool {
 
+	ownerref := obj.GetControllerRef(refs)
+	if ownerref == nil {
+		log.Info("Ownerref Not Found")
+		return false
+	}
+
 	// Check that each sub resource is owned by the phase
 	for _, item := range obj.Items {
-		if !reflect.DeepEqual(item.GetOwnerReferences(), refs) {
+		ref := obj.GetControllerRef(item.GetOwnerReferences())
+		if ref == nil {
+			log.Info("ItemRef Not Found")
+			return false
+		}
+		// if !reflect.DeepEqual(item.GetOwnerReferences(), refs) {
+		//	return false
+		// }
+		if ownerref.UID != ref.UID {
 			return false
 		}
 	}
