@@ -20,9 +20,11 @@ import (
 
 	av1 "github.com/kubedge/kubedge-operator-base/pkg/apis/kubedgeoperators/v1alpha1"
 
+	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	yaml "sigs.k8s.io/yaml"
@@ -117,7 +119,7 @@ func (m KubedgeBaseManager) internalSync(ctx context.Context) (*av1.SubResourceL
 		err := m.KubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
-				log.Error(err, "Can't not retrieve phase")
+				log.Error(err, "Can't Retrieve Resource", "kind", existingResource.GetKind(), "name", existingResource.GetName())
 				errs = append(errs, err)
 			}
 		} else {
@@ -137,7 +139,8 @@ func (m KubedgeBaseManager) internalSync(ctx context.Context) (*av1.SubResourceL
 
 }
 
-// BaseInstallResource creates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
+// BaseInstallResource performs a "helm install" equivalent
+// It creates K8s sub resources (Workflow, Job, ....) attached to this Kubedge CR
 func (m KubedgeBaseManager) BaseInstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 
 	errs := make([]error, 0)
@@ -159,7 +162,7 @@ func (m KubedgeBaseManager) BaseInstallResource(ctx context.Context) (*av1.SubRe
 			if !apierrors.IsAlreadyExists(err) {
 				blob, _ := yaml.Marshal(toCreate)
 				thestr := fmt.Sprintf("[%s]", string(blob))
-				log.Error(err, "Can't not Create Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName(), "resource", thestr)
+				log.Error(err, "Can't Create Resource", "kind", toCreate.GetKind(), "name", toCreate.GetName(), "resource", thestr)
 				errs = append(errs, err)
 			} else {
 				// Should consider as just created by us
@@ -177,7 +180,8 @@ func (m KubedgeBaseManager) BaseInstallResource(ctx context.Context) (*av1.SubRe
 	return created, nil
 }
 
-// BaseUpdateResource updates K8s sub resources (Workflow, Job, ....) attached to this Phase CR
+// BasedUpdateResource performs a "helm upgrade" equivalent. Most likely the Values field in the Kubedge Resource.
+// It updates K8s sub resources (Workflow, Job, ....) attached to this CR
 func (m KubedgeBaseManager) BaseUpdateResource(ctx context.Context) (*av1.SubResourceList, *av1.SubResourceList, error) {
 	updated := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
 
@@ -192,7 +196,7 @@ func (m KubedgeBaseManager) BaseUpdateResource(ctx context.Context) (*av1.SubRes
 	return m.DeployedSubResourceList, updated, nil
 }
 
-// BaseReconcileResource creates or patches resources as necessary to match this Phase CR
+// BaseReconcileResource creates or patches resources as necessary to match this deployed Kubedge CR
 func (m KubedgeBaseManager) BaseReconcileResource(ctx context.Context) (*av1.SubResourceList, error) {
 	errs := make([]error, 0)
 	reconciled := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
@@ -217,17 +221,49 @@ func (m KubedgeBaseManager) BaseReconcileResource(ctx context.Context) (*av1.Sub
 		err := m.KubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
-				log.Error(err, "Can't not retrieve resource")
+				log.Error(err, "Can't Retrieve Resource", "kind", existingResource.GetKind(), "name", existingResource.GetName())
 				errs = append(errs, err)
 			}
 		} else {
-			// A merge patch will preserve other fields modified at runtime.
-			patch := client.MergeFrom(renderedResource.DeepCopy())
-			err := m.KubeClient.Patch(context.TODO(), &existingResource, patch)
-			if err != nil {
-				if !apierrors.IsNotFound(err) {
-					log.Error(err, "Can't not patch resource")
-					errs = append(errs, err)
+			if renderedResource.GetKind() == "StatefulSet" {
+
+				existingStatefulSet := v1.StatefulSet{}
+				err1 := runtime.DefaultUnstructuredConverter.FromUnstructured(existingResource.UnstructuredContent(), &existingStatefulSet)
+				if err1 != nil {
+					log.Error(err1, "error converting existingResource from Unstructured")
+				}
+
+				renderedStatefulSet := v1.StatefulSet{}
+				err2 := runtime.DefaultUnstructuredConverter.FromUnstructured(renderedResource.UnstructuredContent(), &renderedStatefulSet)
+				if err2 != nil {
+					log.Error(err2, "error converting from renderedResource Unstructured")
+				}
+
+				if (existingStatefulSet.Spec.Replicas != nil) && (renderedStatefulSet.Spec.Replicas != nil) && (*existingStatefulSet.Spec.Replicas != *renderedStatefulSet.Spec.Replicas) {
+					// A merge patch will preserve other fields modified at runtime.
+					patch := client.MergeFrom(existingResource.DeepCopy())
+
+					// JEB: Seems convolutedy, probably needs to go through golang training again
+					existingStatefulSet.Spec.Replicas = new(int32)
+					*existingStatefulSet.Spec.Replicas = *renderedStatefulSet.Spec.Replicas
+					unst, err3 := runtime.DefaultUnstructuredConverter.ToUnstructured(&existingStatefulSet)
+					if err3 != nil {
+						log.Error(err3, "error converting to Unstructured")
+					}
+					existingResource.SetUnstructuredContent(unst)
+
+					err := m.KubeClient.Patch(context.TODO(), &existingResource, patch)
+					if err != nil {
+						if !apierrors.IsNotFound(err) {
+							log.Error(err, "Can't Patch Resource", "kind", existingResource.GetKind(), "name", existingResource.GetName())
+							errs = append(errs, err)
+						}
+					} else {
+						log.Info("Patched Resource", "kind", existingResource.GetKind(), "name", existingResource.GetName())
+						reconciled.Items = append(reconciled.Items, existingResource)
+					}
+				} else {
+					reconciled.Items = append(reconciled.Items, existingResource)
 				}
 			} else {
 				reconciled.Items = append(reconciled.Items, existingResource)
@@ -241,7 +277,8 @@ func (m KubedgeBaseManager) BaseReconcileResource(ctx context.Context) (*av1.Sub
 	return reconciled, nil
 }
 
-// BaseUninstallResource delete K8s sub resources (Workflow, Job, ....) attached to this Phase CR
+// BaseUninstallResource performs a "helm delete" equivalent
+// It delete K8s sub resources (Workflow, Job, ....) attached to this Kubedge CR
 func (m KubedgeBaseManager) BaseUninstallResource(ctx context.Context) (*av1.SubResourceList, error) {
 	errs := make([]error, 0)
 	notdeleted := av1.NewSubResourceList(m.PhaseNamespace, m.PhaseName)
@@ -255,7 +292,7 @@ func (m KubedgeBaseManager) BaseUninstallResource(ctx context.Context) (*av1.Sub
 		err := m.KubeClient.Delete(context.TODO(), &toDelete)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
-				log.Error(err, "Can't not delete resource")
+				log.Error(err, "Can't Delete Resource", "kind", toDelete.GetKind(), "name", toDelete.GetName())
 				errs = append(errs, err)
 				notdeleted.Items = append(notdeleted.Items, toDelete)
 			}

@@ -237,7 +237,9 @@ func (o *KubedgeBaseRenderer) UpdateStatefulSet(u *unstructured.Unstructured, k 
 		}
 
 		if k.Replicas != nil {
-			out.Spec.Replicas = k.Replicas
+			// JEB: Seems convolutedy, probably needs to go through golang training again
+			out.Spec.Replicas = new(int32)
+			*out.Spec.Replicas = *k.Replicas
 		}
 
 		if k.Selector != nil {

@@ -34,6 +34,9 @@ type KubedgeConditionStatus string
 
 type KubedgeConditionReason string
 
+// ConditionSeverity expresses the severity of a Condition Type failing.
+type KubedgeConditionSeverity string
+
 // String converts a KubedgeResourceState to a printable string
 func (x KubedgeResourceState) String() string { return string(x) }
 
@@ -103,20 +106,32 @@ const (
 	ReasonUpdateError                           = "UpdateError"
 )
 
+// ConditionSeverityError specifies that a condition with `Status=False` is an error.
+const (
+	ConditionSeverityError   KubedgeConditionSeverity = "Error"
+	ConditionSeverityWarning KubedgeConditionSeverity = "Warning"
+	ConditionSeverityInfo    KubedgeConditionSeverity = "Info"
+	ConditionSeverityNone    KubedgeConditionSeverity = ""
+)
+
 // KubedgeCondition represents one current condition of an Kubedge resource
 // A condition might not show up if it is not happening.
 // For example, if a chart is not deploying, the Deploying condition would not show up.
 // If a chart is deploying and encountered a problem that prevents the deployment,
 // the Deploying condition's status will would be False and communicate the problem back.
 type KubedgeCondition struct {
-	Type               KubedgeConditionType   `json:"type"`
-	Status             KubedgeConditionStatus `json:"status"`
-	Reason             KubedgeConditionReason `json:"reason,omitempty"`
-	Message            string                 `json:"message,omitempty"`
-	ResourceName       string                 `json:"resourceName,omitempty"`
-	ResourceVersion    int32                  `json:"resourceVersion,omitempty"`
-	LastTransitionTime metav1.Time            `json:"lastTransitionTime,omitempty"`
+	Type               KubedgeConditionType     `json:"type"`
+	Status             KubedgeConditionStatus   `json:"status"`
+	Severity           KubedgeConditionSeverity `json:"severity,omitempty"`
+	Reason             KubedgeConditionReason   `json:"reason,omitempty"`
+	Message            string                   `json:"message,omitempty"`
+	ResourceName       string                   `json:"resourceName,omitempty"`
+	ResourceVersion    int32                    `json:"resourceVersion,omitempty"`
+	LastTransitionTime metav1.Time              `json:"lastTransitionTime,omitempty"`
 }
+
+// Conditions provide observations of the operational state of a Cluster API resource.
+type KubedgeConditions []KubedgeCondition
 
 type KubedgeConditionListHelper struct {
 	Items []KubedgeCondition `json:"items"`

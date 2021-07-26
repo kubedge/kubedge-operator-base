@@ -108,6 +108,7 @@ spec:
                       metadata:
                         description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
                         type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       spec:
                         description: 'Specification of the desired behavior of the
                           pod. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
@@ -7189,6 +7190,7 @@ spec:
                       metadata:
                         description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
                         type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       spec:
                         description: 'Specification of the desired behavior of the
                           pod. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
@@ -14228,6 +14230,10 @@ spec:
                     resourceVersion:
                       format: int32
                       type: integer
+                    severity:
+                      description: ConditionSeverity expresses the severity of a Condition
+                        Type failing.
+                      type: string
                     status:
                       description: KubedgeConditionStatus represents the current status
                         of a Condition
