@@ -3,9 +3,9 @@ sudo: true
 language: go
 
 go:
-  - "1.16.x"
+  - "1.17.x"
 
-service:
+services:
   - docker
 
 env:
@@ -18,7 +18,7 @@ jobs:
     - stage: build docker image
       script:
       - export DHEALTHREPO=$DOCKER_NAMESPACE/kubedge-base-operator-dev
-      - export VERSION=v0.1.21-kubedge.20210726
+      - export VERSION=v0.1.23-kubedge.20211216
       - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/kubedge-base-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v1 ./cmd/...
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - docker build -t $DHEALTHREPO:$VERSION -f build/Dockerfile .
@@ -28,6 +28,6 @@ jobs:
     - stage: test docker image
       script:
       - export DHEALTHREPO=$DOCKER_NAMESPACE/kubedge-base-operator-dev
-      - export VERSION=v0.1.21-kubedge.20210726
+      - export VERSION=v0.1.23-kubedge.20211216
       - docker run -d --name test_base $DHEALTHREPO:$VERSION
       - docker ps | grep -q test_base
