@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.1
+    controller-gen.kubebuilder.io/version: v0.11.3
   creationTimestamp: null
   name: controllerrevisions.kubedgeoperators.kubedge.cloud
 spec:
@@ -38,6 +37,7 @@ spec:
           data:
             description: Data is the serialized representation of the state.
             type: object
+            x-kubernetes-preserve-unknown-fields: true
           kind:
             description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
@@ -55,9 +55,3 @@ spec:
         type: object
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
