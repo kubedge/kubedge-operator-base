@@ -56,7 +56,7 @@ func main() {
 	ctx := context.TODO()
 
 	// Become the leader before proceeding
-	err = k8sutil.Become(ctx, "kubedge-arpscan-operator-lock")
+	err = k8sutil.Become(ctx, "kubedge-base-operator-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
