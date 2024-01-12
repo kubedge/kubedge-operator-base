@@ -64,10 +64,10 @@ func main() {
 
 	// Create a new Cmd to provide shared dependencies and start components
 	// mgr, err := manager.New(cfg, manager.Options{
-	//	Namespace: namespace,
-	//		// MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+	//     Namespace: namespace,
+	//     MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
 	// })
-	mgr, err := manager.New(cfg, manager.Options{Cache: cache.Options{DefaultNamespaces: map[string]cache.Config{namespace: cache.Config{}}}})
+	mgr, err := manager.New(cfg, manager.Options{Cache: cache.Options{DefaultNamespaces: map[string]cache.Config{namespace: {}}}})
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
