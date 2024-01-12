@@ -72,7 +72,7 @@ func BuildDependentResourceWatchUpdater(mgr manager.Manager, owner *unstructured
 				continue
 			}
 
-			err = c.Watch(&source.Kind{Type: &u}, &crthandler.EnqueueRequestForOwner{OwnerType: owner}, dependentPredicate)
+			err = c.Watch(source.Kind(mgr.GetCache(), &u), crthandler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), owner, crthandler.OnlyControllerOwner()), dependentPredicate)
 			if err != nil {
 				wlog.Error(err, "Add Watch to Controller")
 				return err
