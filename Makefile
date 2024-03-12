@@ -85,7 +85,7 @@ generate-go: $(CONTROLLER_GEN)
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	mkdir -p chart/templates/
 	# GO111MODULE=on $(CONTROLLER_GEN) crd paths=./pkg/apis/kubedgeoperators/... crd:trivialVersions=true output:crd:dir=./chart/templates/ output:none
-	GO111MODULE=on $(CONTROLLER_GEN) crd paths=./pkg/apis/kubedgeoperators/... output:crd:dir=./chart/templates/ output:none
+	GO111MODULE=on $(CONTROLLER_GEN) crd:generateEmbeddedObjectMeta=true paths=./pkg/apis/kubedgeoperators/... output:crd:dir=./chart/templates/ output:none
 
 # Build the docker image
 docker-build: fmt docker-build-v1
