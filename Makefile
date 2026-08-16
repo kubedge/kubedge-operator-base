@@ -1,10 +1,13 @@
 
 # Image URL to use all building/pushing image targets
 COMPONENT        ?= kubedge-base-operator
-VERSION_V1       ?= 0.1.29-kubedge.20240602
+VERSION          ?= 0.1.36-kubedge.20260816
 DHUBREPO         ?= kubedge1/${COMPONENT}-dev
 DOCKER_NAMESPACE ?= kubedge1
-IMG_V1           ?= ${DHUBREPO}:v${VERSION_V1}
+IMG              ?= ${DHUBREPO}:v${VERSION}
+# Target platforms for the multi-arch image. arm64 is primary (Pi armv8 + Apple Silicon);
+# amd64 kept for x86 clusters. Override with `make docker-buildx PLATFORMS=linux/arm64`.
+PLATFORMS        ?= linux/arm64,linux/amd64
 
 BINDIR           := bin
 TOOLS_DIR        := tools
@@ -87,26 +90,26 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	# GO111MODULE=on $(CONTROLLER_GEN) crd paths=./pkg/apis/kubedgeoperators/... crd:trivialVersions=true output:crd:dir=./chart/templates/ output:none
 	GO111MODULE=on $(CONTROLLER_GEN) crd:generateEmbeddedObjectMeta=true paths=./pkg/apis/kubedgeoperators/... output:crd:dir=./chart/templates/ output:none
 
-# Build the docker image
-docker-build: fmt docker-build-v1
+# Build a multi-arch image (manifest list) and push it. The binary is compiled per
+# TARGETARCH inside build/Dockerfile, so a single command covers every platform.
+.PHONY: docker-buildx
+docker-buildx: vet-v1
+	docker buildx build --platform ${PLATFORMS} -f build/Dockerfile -t ${IMG} -t ${DHUBREPO}:latest --push .
 
-docker-build-v1: vet-v1
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/kubedge-base-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v1 ./cmd/...
-	docker build . -f build/Dockerfile -t ${IMG_V1}
-	docker tag ${IMG_V1} ${DHUBREPO}:latest
+# Local single-arch image for dev (loads into the local docker; no push).
+.PHONY: docker-build
+docker-build: vet-v1
+	docker buildx build --load -f build/Dockerfile -t ${IMG} .
 
-
-# Push the docker image
-docker-push: docker-push-v1
-
-docker-push-v1:
-	docker push ${IMG_V1}
+# Push is folded into docker-buildx (--push); kept as an alias for muscle memory.
+.PHONY: docker-push
+docker-push: docker-buildx
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-install: install-v1
+.PHONY: install
+install: docker-buildx
+	helm install kubedge-base-operator chart --set images.tags.operator=${IMG}
 
-purge: setup
-	helm delete --purge kubedge-base-operator
-
-install-v1: docker-build-v1
-	helm install --name kubedge-base-operator chart --set images.tags.operator=${IMG_V1}
+.PHONY: purge
+purge:
+	helm uninstall kubedge-base-operator
