@@ -36,20 +36,27 @@ DRY_RUN=0
 case "${1:-}" in
   --dry-run) DRY_RUN=1 ;;
   --print-retract)
-    ver="${2:?usage: --print-retract <version> [reason]}"; reason="${3:-superseded}"
+    ver="${2:?usage: --print-retract <version> [reason]}"
+    reason="${3:-superseded}"
     echo "Add this to go.mod (then release a NEW version that includes it):"
     echo ""
     echo "retract $ver // $reason"
     exit 0
     ;;
-  "" ) : ;;
-  * ) echo "unknown arg: $1" >&2; exit 2 ;;
+  "") : ;;
+  *)
+    echo "unknown arg: $1" >&2
+    exit 2
+    ;;
 esac
 
 # --- derive the tag from the pinned k8s minor + today -----------------------------------
-kapi="$(awk '$1=="k8s.io/api"{print $2; exit}' go.mod)"     # e.g. v0.36.3
-[ -n "$kapi" ] || { echo "could not read k8s.io/api version from go.mod" >&2; exit 1; }
-minor="$(echo "$kapi" | cut -d. -f2)"                        # e.g. 36
+kapi="$(awk '$1=="k8s.io/api"{print $2; exit}' go.mod)" # e.g. v0.36.3
+[ -n "$kapi" ] || {
+  echo "could not read k8s.io/api version from go.mod" >&2
+  exit 1
+}
+minor="$(echo "$kapi" | cut -d. -f2)" # e.g. 36
 today="$(date +%Y%m%d)"
 TAG="v0.1.${minor}-kubedge.${today}"
 
@@ -58,21 +65,33 @@ echo "candidate tag  : $TAG"
 
 # --- guardrails -------------------------------------------------------------------------
 branch="$(git rev-parse --abbrev-ref HEAD)"
-[ "$branch" = "main" ] || { echo "refusing: not on main (on '$branch'). Release from main." >&2; exit 1; }
-git diff --quiet && git diff --cached --quiet || { echo "refusing: working tree not clean." >&2; exit 1; }
+[ "$branch" = "main" ] || {
+  echo "refusing: not on main (on '$branch'). Release from main." >&2
+  exit 1
+}
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "refusing: working tree not clean." >&2
+  exit 1
+fi
 git fetch origin --quiet --tags
-[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "refusing: local main != origin/main. Pull/push first." >&2; exit 1; }
+[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || {
+  echo "refusing: local main != origin/main. Pull/push first." >&2
+  exit 1
+}
 
 # NEVER reuse or move a tag. Refuse if it exists locally, on origin, or on the proxy.
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  echo "refusing: tag $TAG already exists locally. Tags are immutable — bump the date or add a suffix." >&2; exit 1
+  echo "refusing: tag $TAG already exists locally. Tags are immutable — bump the date or add a suffix." >&2
+  exit 1
 fi
 if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-  echo "refusing: tag $TAG already exists on origin. Never move a published tag." >&2; exit 1
+  echo "refusing: tag $TAG already exists on origin. Never move a published tag." >&2
+  exit 1
 fi
 mod="$(awk 'NR==1{print $2}' go.mod)"
 if curl -fs "https://proxy.golang.org/${mod}/@v/list" 2>/dev/null | grep -qx "$TAG"; then
-  echo "refusing: $TAG is already known to proxy.golang.org — it is permanently immutable." >&2; exit 1
+  echo "refusing: $TAG is already known to proxy.golang.org — it is permanently immutable." >&2
+  exit 1
 fi
 
 # --- verify green before tagging --------------------------------------------------------
