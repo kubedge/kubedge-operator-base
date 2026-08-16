@@ -172,7 +172,3 @@ func NewEMBBSliceListVersionKind(namespace string, name string) *unstructured.Un
 	u.SetName(name)
 	return u
 }
-
-func init() {
-	SchemeBuilder.Register(&EMBBSlice{}, &EMBBSliceList{})
-}

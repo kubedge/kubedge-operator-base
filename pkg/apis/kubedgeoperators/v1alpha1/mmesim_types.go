@@ -178,7 +178,3 @@ func NewMMESimListVersionKind(namespace string, name string) *unstructured.Unstr
 	u.SetName(name)
 	return u
 }
-
-func init() {
-	SchemeBuilder.Register(&MMESim{}, &MMESimList{})
-}

@@ -317,49 +317,10 @@ func (obj *KubernetesDependency) extractField(key string, u *unstructured.Unstru
 	}
 }
 
-// Check the state of a service
-// This code is inspired from the kubernetes-entrypoint project
-func (obj *KubernetesDependency) IsServiceReady(u *unstructured.Unstructured) bool {
-	if u == nil {
-		return false
-	}
-
-	// TODO(deps-bump): corev1.Endpoints is deprecated in k8s v1.33+ in favor of
-	// discoveryv1.EndpointSlice; migrating requires the operator to watch
-	// EndpointSlice objects instead. Tracked as a follow-up. Still functional.
-	endpointsu := corev1.Endpoints{} //nolint:staticcheck // SA1019: deprecated but functional; migration tracked separately
-	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &endpointsu)
-	if err1u != nil {
-		return false
-	}
-
-	for _, subset := range endpointsu.Subsets {
-		if len(subset.Addresses) > 0 {
-			return true
-		}
-	}
-	return false
-}
-
-func (obj *KubernetesDependency) IsServiceFailedOrError(u *unstructured.Unstructured) bool {
-	if u == nil {
-		return false
-	}
-
-	endpointsu := corev1.Endpoints{} //nolint:staticcheck // SA1019: deprecated but functional; migration tracked separately (see IsServiceReady)
-	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &endpointsu)
-	if err1u != nil {
-		return false
-	}
-
-	for _, subset := range endpointsu.Subsets {
-		if false {
-			log.Info("%v", subset)
-		}
-	}
-
-	return false
-}
+// Service/Deployment/StatefulSet readiness is treated as ready-by-presence in the
+// dispatch switches above; there is no endpoint-level readiness check. (The former
+// IsServiceReady/IsServiceFailedOrError helpers were dead code built on the deprecated
+// corev1.Endpoints type and were removed during the k8s API modernization.)
 
 // Check the state of a container
 // This code is inspired from the kubernetes-entrypoint project

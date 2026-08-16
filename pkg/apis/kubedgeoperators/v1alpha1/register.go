@@ -6,17 +6,32 @@
 package v1alpha1
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
 var (
 	// SchemeGroupVersion is group version used to register these objects
 	SchemeGroupVersion = schema.GroupVersion{Group: "kubedgeoperators.kubedge.cloud", Version: "v1alpha1"}
 
-	// SchemeBuilder is used to add go types to the GroupVersionKind scheme.
-	// TODO(deps-bump): controller-runtime scheme.Builder is deprecated as of the
-	// k8s v0.36 bump; migrate scheme registration to apimachinery's
-	// runtime.NewSchemeBuilder as a follow-up. Still functional for now.
-	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion} //nolint:staticcheck // SA1019: deprecated but functional; migration tracked separately
+	// SchemeBuilder collects the functions that add this group's types to a Scheme.
+	// Uses apimachinery's runtime.NewSchemeBuilder so this api package depends only on
+	// k8s.io/apimachinery (no controller-runtime), per the SA1019 guidance.
+	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
+
+	// AddToScheme adds the types in this group-version to a Scheme.
+	AddToScheme = SchemeBuilder.AddToScheme
 )
+
+// addKnownTypes registers this group's types with the given Scheme.
+func addKnownTypes(scheme *runtime.Scheme) error {
+	scheme.AddKnownTypes(SchemeGroupVersion,
+		&Arpscan{}, &ArpscanList{},
+		&ECDSCluster{}, &ECDSClusterList{},
+		&MMESim{}, &MMESimList{},
+		&EMBBSlice{}, &EMBBSliceList{},
+	)
+	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
+	return nil
+}

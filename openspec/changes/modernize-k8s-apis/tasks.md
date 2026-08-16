@@ -1,0 +1,7 @@
+# Tasks — modernize-k8s-apis
+
+- [x] Grep the tree for the deferred suppressions: `//nolint:staticcheck` + `TODO(deps-bump)`.
+- [x] Migrate `scheme.Builder` → `runtime.NewSchemeBuilder` in `pkg/apis/kubedgeoperators/v1alpha1/register.go`; drop the SA1019 nolint. (Centralized type registration in `addKnownTypes`; removed the per-`_types.go` `init()` `SchemeBuilder.Register(...)` calls, which no longer compile against apimachinery's func-based builder.)
+- [x] Migrate `corev1.Endpoints` usage → EndpointSlice; adjust the watched types/RBAC. — **DEVIATION:** `IsServiceReady`/`IsServiceFailedOrError` turned out to be **dead code** (the dispatch switches handle `"Service"` inline as ready-by-presence; nothing ever fed them an Endpoints object). Per the proposal's non-goal (no behavior change), the correct modernization was to **remove the dead functions**, not build an unused EndpointSlice reader. No watched-types/RBAC change was needed (nothing watched Endpoints). Deprecated usage is gone. *Spec requirement text should be reconciled to "removed dead Endpoints code" before archive — operator to confirm.*
+- [x] `go build ./... && go vet ./... && go test ./... -race && golangci-lint run --max-same-issues 0 --max-issues-per-linter 0 ./...` all green.
+- [ ] Re-tag base (new `v0.1.<k8s-minor>-kubedge.<buildday>`) and have consumers realign, since `register.go` is part of the shared surface. — **operator decision (STOP → REPORT); not tagged unilaterally.**
