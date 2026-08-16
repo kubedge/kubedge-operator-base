@@ -1,20 +1,40 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project context — shown to AI when creating artifacts.
+context: |
+  Role: BASE library of the kubedge OPERATOR family. This repo is the shared
+  dependency; the operators (-arpscan/-ecds/-embb/-mme) import it. Changes here
+  ripple to every consumer, so version them together.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  What it provides (the "modules" consumers depend on):
+    - shared-crd-kinds       : the CRD API types (group kubedgeoperators.kubedge.cloud/v1alpha1):
+                               Arpscan, ECDSCluster, MMESim, EMBBSlice, OSLC, plus the
+                               common declarative model (KubedgeSpec.targetState /
+                               KubedgeStatus.actualState/satisfied/conditions).
+    - kubedgemanager-engine  : a manager-factory that renders helm-style resources with
+                               owner references and drives each kind's lifecycle phase.
+    - base-reconciler        : KubedgeBaseReconciler (shared reconcile loop + dependent
+                               watch predicates) and the conditions package.
+
+  Tech / build:
+    - Kubernetes operator, Go. Layout is legacy operator-sdk-v0 (pkg/apis, pkg/controller,
+      cmd/manager); PROJECT version "1".
+    - The Makefile IS the CI: gotidy / vet / generate (controller-gen: CRD+deepcopy) /
+      dockerbuildx / push. Verify loop is raw `go build/vet/test ./...`, NOT `make test`.
+    - Images: target arm64 (Pi armv8 + Apple-Silicon dev) via docker buildx multi-arch,
+      one image:tag (no per-arch names). Deploy to a k8s cluster; the run gate is
+      build image -> load into cluster -> deploy -> confirm start -> undeploy.
+
+  Versioning / release:
+    - Tag convention: v0.1.<k8s-minor>-kubedge.<buildday>. Current published release:
+      v0.1.36-kubedge.20260815 (k8s v0.36.3, controller-runtime v0.24.1, go 1.26).
+    - Consumers realign UP to this tag: `go get github.com/kubedge/kubedge-operator-base@v0.1.36-kubedge.20260815 && go mod tidy`.
+
+  Owed follow-ups (deferred with //nolint, tracked as changes here):
+    - corev1.Endpoints -> EndpointSlice ; controller-runtime scheme.Builder ->
+      apimachinery runtime.NewSchemeBuilder.
+
+rules:
+  spec:
+    - Describe CURRENT behavior; do not spec aspirational features.
+    - Name the Go package/type that implements each requirement.
