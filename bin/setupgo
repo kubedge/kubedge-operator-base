@@ -1,6 +1,6 @@
 export AIML_VOLUME=/Volumes/K8S01
-source .zshenv
-export GOPATH="/Volumes/APP01/Users/jbrette/.go"
+source $HOME/.zshenv
+export GOPATH="/Volumes/K8S01/Users/jbrette/.go"
 export GOROOT="$(brew --prefix golang)/libexec"
 export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
 #test -d "${GOPATH}" || mkdir "${GOPATH}"
