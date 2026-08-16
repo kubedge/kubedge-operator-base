@@ -15,7 +15,7 @@ package basemanager
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -47,7 +47,7 @@ type KubedgeBaseRenderer struct {
 // Adds the ownerrefs to all the documents in a YAML file
 func (o KubedgeBaseRenderer) RenderFile(name string, namespace string, fileName string) (*av1.SubResourceList, error) {
 
-	yamlfmt, ferr := ioutil.ReadFile(fileName)
+	yamlfmt, ferr := os.ReadFile(fileName)
 	if ferr != nil {
 		log.Error(ferr, "Can not read file")
 		return av1.NewSubResourceList(namespace, name), ferr

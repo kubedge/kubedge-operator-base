@@ -17,9 +17,10 @@ limitations under the License.
 package record
 
 import (
-	"strings"
 	"sync"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -28,6 +29,10 @@ import (
 var (
 	initOnce        sync.Once
 	defaultRecorder record.EventRecorder
+
+	// titler upper-cases the first letter of each word, matching the historical
+	// strings.Title behavior (cases.NoLower leaves the rest of each word intact).
+	titler = cases.Title(language.Und, cases.NoLower)
 )
 
 func init() {
@@ -44,20 +49,20 @@ func InitFromRecorder(recorder record.EventRecorder) {
 
 // Event constructs an event from the given information and puts it in the queue for sending.
 func Event(object runtime.Object, reason, message string) {
-	defaultRecorder.Event(object, corev1.EventTypeNormal, strings.Title(reason), message)
+	defaultRecorder.Event(object, corev1.EventTypeNormal, titler.String(reason), message)
 }
 
 // Eventf is just like Event, but with Sprintf for the message field.
 func Eventf(object runtime.Object, reason, message string, args ...interface{}) {
-	defaultRecorder.Eventf(object, corev1.EventTypeNormal, strings.Title(reason), message, args...)
+	defaultRecorder.Eventf(object, corev1.EventTypeNormal, titler.String(reason), message, args...)
 }
 
 // Event constructs a warning event from the given information and puts it in the queue for sending.
 func Warn(object runtime.Object, reason, message string) {
-	defaultRecorder.Event(object, corev1.EventTypeWarning, strings.Title(reason), message)
+	defaultRecorder.Event(object, corev1.EventTypeWarning, titler.String(reason), message)
 }
 
 // Eventf is just like Event, but with Sprintf for the message field.
 func Warnf(object runtime.Object, reason, message string, args ...interface{}) {
-	defaultRecorder.Eventf(object, corev1.EventTypeWarning, strings.Title(reason), message, args...)
+	defaultRecorder.Eventf(object, corev1.EventTypeWarning, titler.String(reason), message, args...)
 }

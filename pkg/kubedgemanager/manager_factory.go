@@ -33,21 +33,6 @@ type managerFactory struct {
 	kubeClient client.Client
 }
 
-// Simple function to init the renderFiles passed to the helm renderer
-func initRenderFiles(stage av1.OslcPhase) []string {
-	renderFiles := make([]string, 0)
-	return renderFiles
-}
-
-// Simple function to init the renderValues passed to the helm renderer
-func initRenderValues(stage av1.OslcPhase) map[string]interface{} {
-	oslcValues := map[string]interface{}{}
-	oslcValues["stage"] = stage.String()
-	renderValues := map[string]interface{}{}
-	renderValues["oslc"] = oslcValues
-	return renderValues
-}
-
 // NewManagerFactory returns a new factory.
 func NewManagerFactory(mgr manager.Manager) KubedgeResourceManagerFactory {
 	return &managerFactory{kubeClient: mgr.GetClient()}

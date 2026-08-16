@@ -86,7 +86,7 @@ func ToECDSCluster(u *unstructured.Unstructured) *ECDSCluster {
 
 // Convert a typed ECDSCluster into an unstructured.Unstructured
 func (obj *ECDSCluster) FromECDSCluster() *unstructured.Unstructured {
-	u := NewECDSClusterVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
+	u := NewECDSClusterVersionKind(obj.Namespace, obj.Name)
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -121,7 +121,7 @@ func (obj *ECDSCluster) IsFailedOrError() bool {
 }
 
 func (obj *ECDSCluster) GetName() string {
-	return obj.ObjectMeta.Name
+	return obj.Name
 }
 
 // Returns a GKV for ECDSCluster

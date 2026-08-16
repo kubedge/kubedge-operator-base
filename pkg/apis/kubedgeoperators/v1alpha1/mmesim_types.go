@@ -83,7 +83,7 @@ func ToMMESim(u *unstructured.Unstructured) *MMESim {
 
 // Convert a typed MMESim into an unstructured.Unstructured
 func (obj *MMESim) FromMMESim() *unstructured.Unstructured {
-	u := NewMMESimVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
+	u := NewMMESimVersionKind(obj.Namespace, obj.Name)
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -118,7 +118,7 @@ func (obj *MMESim) IsFailedOrError() bool {
 }
 
 func (obj *MMESim) GetName() string {
-	return obj.ObjectMeta.Name
+	return obj.Name
 }
 
 // Returns a GKV for MMESim

@@ -20,24 +20,24 @@ import (
 
 var (
 	// ErrNotFound indicates the resource was not found.
-	ErrNotFound = errors.New("Resource not found")
+	ErrNotFound = errors.New("resource not found")
 
 	// ErrOwnershipMismatch indicates that one of the subresources does
 	// not have the right ownership.
-	ErrOwnershipMismatch = errors.New("Ownership Mismatch")
+	ErrOwnershipMismatch = errors.New("ownership mismatch")
 
 	// ErrSync detected during SyncResource
-	ErrSync = errors.New("Sync Error")
+	ErrSync = errors.New("sync error")
 
 	// ErrInstall detected during InstallResource
-	ErrInstall = errors.New("Install Error")
+	ErrInstall = errors.New("install error")
 
 	// ErrUninstall detected during UninstallResource
-	ErrUninstall = errors.New("Uninstall Error")
+	ErrUninstall = errors.New("uninstall error")
 
 	// ErrUpdate detected during UpdateResource
-	ErrUpdate = errors.New("Update Error")
+	ErrUpdate = errors.New("update error")
 
 	// ErrReconcile detected during ReconcileResource
-	ErrReconcile = errors.New("Reconcile Error")
+	ErrReconcile = errors.New("reconcile error")
 )

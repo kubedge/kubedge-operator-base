@@ -77,7 +77,7 @@ func ToEMBBSlice(u *unstructured.Unstructured) *EMBBSlice {
 
 // Convert a typed EMBBSlice into an unstructured.Unstructured
 func (obj *EMBBSlice) FromEMBBSlice() *unstructured.Unstructured {
-	u := NewEMBBSliceVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
+	u := NewEMBBSliceVersionKind(obj.Namespace, obj.Name)
 	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
 	if err != nil {
 		return u
@@ -112,7 +112,7 @@ func (obj *EMBBSlice) IsFailedOrError() bool {
 }
 
 func (obj *EMBBSlice) GetName() string {
-	return obj.ObjectMeta.Name
+	return obj.Name
 }
 
 // Returns a GKV for EMBBSlice

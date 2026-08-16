@@ -15,7 +15,6 @@
 package basemanager_test
 
 import (
-	"fmt"
 	"testing"
 
 	. "github.com/kubedge/kubedge-operator-base/pkg/kubedgemanager"
@@ -45,6 +44,6 @@ func TestBaseRenderer(t *testing.T) {
 
 	for _, toCreate := range rendered.Items {
 		blob, _ := yaml.Marshal(toCreate)
-		_ = fmt.Sprintf("%s", string(blob))
+		_ = string(blob)
 	}
 }

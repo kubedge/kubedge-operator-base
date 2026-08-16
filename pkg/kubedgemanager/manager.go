@@ -107,8 +107,6 @@ func (m KubedgeBaseManager) internalSync(ctx context.Context) (*av1.SubResourceL
 		return nil, deployed, err
 	}
 
-	errs := make([]error, 0)
-
 	for _, renderedResource := range rendered.Items {
 		existingResource := unstructured.Unstructured{}
 		existingResource.SetAPIVersion(renderedResource.GetAPIVersion())
@@ -120,7 +118,6 @@ func (m KubedgeBaseManager) internalSync(ctx context.Context) (*av1.SubResourceL
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				log.Error(err, "Can't Retrieve Resource", "kind", existingResource.GetKind(), "name", existingResource.GetName())
-				errs = append(errs, err)
 			}
 		} else {
 			deployed.Items = append(deployed.Items, existingResource)
@@ -131,10 +128,6 @@ func (m KubedgeBaseManager) internalSync(ctx context.Context) (*av1.SubResourceL
 		return rendered, nil, ErrOwnershipMismatch
 	}
 
-	// TODO(jeb): not sure this is right
-	// if len(errs) != 0 {
-	//	return rendered, deployed, errs[0]
-	// }
 	return rendered, deployed, nil
 
 }
