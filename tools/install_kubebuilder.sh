@@ -6,7 +6,7 @@ version=3.15.1
 arch=amd64
 
 mkdir -p ./bin
-cd ./bin
+cd ./bin || exit 1
 curl -L -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${version}/kubebuilder_linux_${arch}"
 chmod u+x kubebuilder_linux_${arch}
 

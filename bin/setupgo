@@ -1,7 +1,11 @@
+# shellcheck shell=bash
+# Sourced (not executed) to set up the per-drive Go toolchain env.
 export AIML_VOLUME=/Volumes/K8S01
-source $HOME/.zshenv
+# shellcheck source=/dev/null
+source "$HOME/.zshenv"
 export GOPATH="/Volumes/K8S01/Users/jbrette/.go"
-export GOROOT="$(brew --prefix golang)/libexec"
+GOROOT="$(brew --prefix golang)/libexec"
+export GOROOT
 export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
 #test -d "${GOPATH}" || mkdir "${GOPATH}"
 #test -d "${GOPATH}/src/github.com" || mkdir -p "${GOPATH}/src/github.com"
