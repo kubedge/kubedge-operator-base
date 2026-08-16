@@ -181,7 +181,3 @@ func NewECDSClusterListVersionKind(namespace string, name string) *unstructured.
 	u.SetName(name)
 	return u
 }
-
-func init() {
-	SchemeBuilder.Register(&ECDSCluster{}, &ECDSClusterList{})
-}

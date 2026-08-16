@@ -152,7 +152,3 @@ func NewArpscanListVersionKind(namespace string, name string) *unstructured.Unst
 	u.SetName(name)
 	return u
 }
-
-func init() {
-	SchemeBuilder.Register(&Arpscan{}, &ArpscanList{})
-}
