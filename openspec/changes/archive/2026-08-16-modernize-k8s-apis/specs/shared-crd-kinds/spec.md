@@ -12,12 +12,16 @@ shared surface consumers import, this migration SHALL be released as a new base 
 - **WHEN** `golangci-lint run` executes over `register.go`
 - **THEN** no SA1019 `scheme.Builder` deprecation is reported and no nolint suppresses it
 
-### Requirement: Endpoint data uses EndpointSlice, not the deprecated Endpoints type
+### Requirement: No deprecated corev1.Endpoints usage
 
-Any use of `corev1.Endpoints` SHALL be migrated to EndpointSlice, updating the watched
-types and RBAC accordingly, and the corresponding `//nolint` + `TODO(deps-bump)` SHALL be
-removed.
+The api package SHALL NOT use the deprecated `corev1.Endpoints` type. The
+`IsServiceReady`/`IsServiceFailedOrError` helpers that relied on it were **dead code** —
+never invoked, because the dependency-readiness dispatch treats `Service` as
+ready-by-presence — and SHALL be removed together with the corresponding `//nolint` +
+`TODO(deps-bump)` suppression. Service/Deployment/StatefulSet readiness semantics are
+unchanged (no behavior change). (No EndpointSlice reader is introduced: nothing consumed
+endpoint data, so there is no watch/RBAC surface to migrate.)
 
 #### Scenario: no deprecated Endpoints usage remains
-- **WHEN** the tree is linted after migration
-- **THEN** no `corev1.Endpoints` deprecation is reported
+- **WHEN** the tree is linted
+- **THEN** no `corev1.Endpoints` deprecation is reported and no nolint suppresses one
