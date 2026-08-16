@@ -221,7 +221,7 @@ func mirror(from Getter, targetCondition av1.KubedgeConditionType, options ...Mi
 		case true:
 			condition = TrueCondition(targetCondition)
 		case false:
-			condition = FalseCondition(targetCondition, mirrorOpt.fallbackReason, mirrorOpt.fallbackSeverity, mirrorOpt.fallbackMessage)
+			condition = FalseCondition(targetCondition, mirrorOpt.fallbackReason, mirrorOpt.fallbackSeverity, "%s", mirrorOpt.fallbackMessage)
 		}
 	}
 

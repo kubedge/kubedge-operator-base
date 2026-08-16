@@ -75,6 +75,13 @@ tags
 .vscode/*
 .history
 # End of https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
+
+# claude-meta session-local scratch (HANDOFF.md, resume.md, feedback.md, RETROFIT.md)
+.local/
+
+# built tool binaries (controller-gen, etc. — Makefile builds these from tools/)
+tools/bin/
+
 .DS_Store
 .DS_Store
 .DS_Store

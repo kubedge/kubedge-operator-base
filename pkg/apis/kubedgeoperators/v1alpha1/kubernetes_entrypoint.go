@@ -324,7 +324,10 @@ func (obj *KubernetesDependency) IsServiceReady(u *unstructured.Unstructured) bo
 		return false
 	}
 
-	endpointsu := corev1.Endpoints{}
+	// TODO(deps-bump): corev1.Endpoints is deprecated in k8s v1.33+ in favor of
+	// discoveryv1.EndpointSlice; migrating requires the operator to watch
+	// EndpointSlice objects instead. Tracked as a follow-up. Still functional.
+	endpointsu := corev1.Endpoints{} //nolint:staticcheck // SA1019: deprecated but functional; migration tracked separately
 	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &endpointsu)
 	if err1u != nil {
 		return false
@@ -343,7 +346,7 @@ func (obj *KubernetesDependency) IsServiceFailedOrError(u *unstructured.Unstruct
 		return false
 	}
 
-	endpointsu := corev1.Endpoints{}
+	endpointsu := corev1.Endpoints{} //nolint:staticcheck // SA1019: deprecated but functional; migration tracked separately (see IsServiceReady)
 	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &endpointsu)
 	if err1u != nil {
 		return false

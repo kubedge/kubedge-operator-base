@@ -62,9 +62,9 @@ func merge(conditions []localizedCondition, targetCondition av1.KubedgeCondition
 	targetReason := getReason(g, options)
 	targetMessage := getMessage(g, options)
 	if g.TopGroup().status == av1.ConditionStatusFalse {
-		return FalseCondition(targetCondition, targetReason, g.TopGroup().severity, targetMessage)
+		return FalseCondition(targetCondition, targetReason, g.TopGroup().severity, "%s", targetMessage)
 	}
-	return UnknownCondition(targetCondition, targetReason, targetMessage)
+	return UnknownCondition(targetCondition, targetReason, "%s", targetMessage)
 }
 
 // getConditionGroups groups a list of conditions according to status, severity values.
