@@ -1,0 +1,10 @@
+# This repo is a Go project; the only Python in it is delivered by claude-meta and is
+# linted/formatted upstream. Keep the pre-commit ruff hooks off those paths.
+# force-exclude: pre-commit passes files by name, which otherwise bypasses exclusion.
+force-exclude = true
+extend-exclude = [
+  ".agents/",
+  ".claude/",
+  "plugins/",
+  "bin/*.py",
+]
