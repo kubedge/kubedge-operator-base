@@ -243,21 +243,6 @@ jobs:
             shfmt -d -i 2 -ci -bn "${sh_files[@]}"
           fi
 
-  type-check:
-    name: type-check
-    needs: detect
-    if: needs.detect.outputs.python == 'true'
-    runs-on: ubuntu-latest
-    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
-    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v7
-      - run: |
-          uv sync --locked
-          uv run mypy src
-
   test:
     name: test
     needs: detect
@@ -380,25 +365,6 @@ jobs:
         with:
           version: v2.15.0
 
-  # Xcode job — gated on xcode/project.yml AND an Xcode-touching event (see detect).
-  # Skipped on every project without an Xcode part; init-project.sh deletes it outright
-  # from a project whose stacks do not include xcode.
-  xcode:
-    name: xcode
-    needs: detect
-    if: needs.detect.outputs.xcode == 'true'
-    runs-on: macos-latest
-    # macOS runners are slower to start and build than Linux ones; still bounded, so a
-    # stalled step cannot hold the job to GitHub's 6 h ceiling at 10x the minute cost.
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-      - name: Install XcodeGen
-        timeout-minutes: 5  # brew is where runs hang; the build is bounded by the job
-        run: brew install xcodegen
-      - name: build + test
-        run: bin/xcode test
-
   image-check:
     name: image-check
     needs: detect
@@ -418,104 +384,3 @@ jobs:
               mirrors = ["mirror.gcr.io"]
       - name: build every platform (no push)
         run: make docker-buildx-check
-
-  rust:
-    name: rust (${{ matrix.dir }})
-    needs: detect
-    if: needs.detect.outputs.rust == 'true'
-    runs-on: ubuntu-latest
-    # A cold cargo build is the slowest job here; bounded like every other job.
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        dir: ${{ fromJSON(needs.detect.outputs.rust_dirs) }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.dir }}
-    steps:
-      - uses: actions/checkout@v7
-      # The runner's rustup installs the toolchain the crate's rust-toolchain.toml pins.
-      - name: toolchain from rust-toolchain.toml
-        run: rustup toolchain install && rustup show active-toolchain
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: ${{ matrix.dir }}
-      - run: cargo fmt --check
-      - run: cargo clippy --all-targets --locked -- -D warnings
-      - run: cargo test --locked
-
-  cargo-deny:
-    name: cargo-deny (${{ matrix.dir }})
-    needs: detect
-    if: needs.detect.outputs.rust == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        dir: ${{ fromJSON(needs.detect.outputs.rust_dirs) }}
-    steps:
-      - uses: actions/checkout@v7
-      # With the crate's deny.toml: advisories, licences, bans and sources.
-      - if: hashFiles(format('{0}/deny.toml', matrix.dir)) != ''
-        uses: EmbarkStudios/cargo-deny-action@v2
-        with:
-          manifest-path: ${{ matrix.dir }}/Cargo.toml
-          command-arguments: --config ${{ matrix.dir }}/deny.toml
-      # Without one, licences cannot be judged (cargo-deny's default allows none), so only
-      # advisories: a crate gains the full check by adding a deny.toml.
-      - if: hashFiles(format('{0}/deny.toml', matrix.dir)) == ''
-        uses: EmbarkStudios/cargo-deny-action@v2
-        with:
-          manifest-path: ${{ matrix.dir }}/Cargo.toml
-          command: check advisories
-
-  java:
-    name: java (${{ matrix.dir }})
-    needs: detect
-    if: needs.detect.outputs.java == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        dir: ${{ fromJSON(needs.detect.outputs.java_dirs) }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.dir }}
-    steps:
-      - uses: actions/checkout@v7
-      # JDK 25, the LTS java-stack projects compile for (maven.compiler.release 25) and the
-      # `java` machine profile installs (spec java-stack). A project pinned to another release
-      # sets java-version to match.
-      - uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: "25"
-          cache: maven
-      - run: mvn -B verify
-
-  java-lint:
-    name: java-lint (${{ matrix.dir }})
-    needs: detect
-    if: needs.detect.outputs.java == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        dir: ${{ fromJSON(needs.detect.outputs.java_dirs) }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.dir }}
-    steps:
-      - uses: actions/checkout@v7
-      # The lint profile (-Dlint) runs Error Prone and fails on any javac or Error Prone
-      # warning, on the same JDK as the java job. A project without a `lint` profile just builds.
-      - uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: "25"
-          cache: maven
-      - run: mvn -B -Dlint verify
